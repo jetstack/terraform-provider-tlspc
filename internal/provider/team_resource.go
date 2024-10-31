@@ -143,6 +143,78 @@ func (r *teamResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 }
 
 func (r *teamResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var state, plan teamResourceModel
+
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	diags = req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if state.Name != plan.Name || state.Role != plan.Role {
+		team := tlspc.Team{
+			ID:   state.ID.ValueString(),
+			Name: plan.Name.ValueString(),
+			Role: plan.Role.ValueString(),
+		}
+		_, err := r.client.UpdateTeam(team)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error Updating Team",
+				"Could not update team ID "+state.ID.ValueString()+": "+err.Error(),
+			)
+			return
+		}
+	}
+	stateOwners := map[string]bool{}
+	planOwners := map[string]bool{}
+	for _, v := range state.Owners {
+		stateOwners[v.ValueString()] = true
+	}
+	for _, v := range plan.Owners {
+		planOwners[v.ValueString()] = true
+	}
+	addOwners := []string{}
+	removeOwners := []string{}
+	for k := range stateOwners {
+		if _, exists := planOwners[k]; !exists {
+			removeOwners = append(removeOwners, k)
+		}
+	}
+	for k := range planOwners {
+		if _, exists := stateOwners[k]; !exists {
+			addOwners = append(addOwners, k)
+		}
+	}
+	if len(addOwners) > 0 {
+		_, err := r.client.AddTeamOwners(state.ID.ValueString(), addOwners)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error Updating Team",
+				"Could not update team ID "+state.ID.ValueString()+": "+err.Error(),
+			)
+			return
+		}
+	}
+	if len(removeOwners) > 0 {
+		_, err := r.client.RemoveTeamOwners(state.ID.ValueString(), removeOwners)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error Updating Team",
+				"Could not update team ID "+state.ID.ValueString()+": "+err.Error(),
+			)
+			return
+		}
+	}
+
+	plan.ID = state.ID
+	diags = resp.State.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
 }
 
 func (r *teamResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

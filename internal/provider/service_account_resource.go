@@ -160,6 +160,44 @@ func (r *serviceAccountResource) Read(ctx context.Context, req resource.ReadRequ
 }
 
 func (r *serviceAccountResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan, state serviceAccountResourceModel
+
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	diags = req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	scopes := []string{}
+	for _, v := range plan.Scopes {
+		scopes = append(scopes, v.ValueString())
+	}
+
+	serviceAccount := tlspc.ServiceAccount{
+		ID:                 state.ID.ValueString(),
+		Name:               plan.Name.ValueString(),
+		Owner:              plan.Owner.ValueString(),
+		Scopes:             scopes,
+		PublicKey:          plan.PublicKey.ValueString(),
+		CredentialLifetime: plan.CredentialLifetime.ValueInt32(),
+		AuthenticationType: "rsaKey",
+	}
+
+	err := r.client.UpdateServiceAccount(serviceAccount)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating serviceAccount",
+			"Could not update serviceAccount, unexpected error: "+err.Error(),
+		)
+		return
+	}
+	plan.ID = state.ID
+	diags = resp.State.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
 }
 
 func (r *serviceAccountResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

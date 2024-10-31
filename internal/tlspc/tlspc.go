@@ -54,6 +54,14 @@ func (c *Client) Post(path string, body []byte) (*http.Response, error) {
 	return c.doRequest("POST", path, body)
 }
 
+func (c *Client) Patch(path string, body []byte) (*http.Response, error) {
+	return c.doRequest("PATCH", path, body)
+}
+
+func (c *Client) Delete(path string, body []byte) (*http.Response, error) {
+	return c.doRequest("DELETE", path, body)
+}
+
 type User struct {
 	Username string `json:"username"`
 	ID       string `json:"id"`
@@ -147,6 +155,119 @@ func (c *Client) GetTeam(id string) (*Team, error) {
 	return &team, nil
 }
 
+type updateTeam struct {
+	Name string `json:"name"`
+	Role string `json:"role"`
+}
+
+func (c *Client) UpdateTeam(team Team) (*Team, error) {
+	id := team.ID
+	if id == "" {
+		return nil, errors.New("Empty ID")
+	}
+	team.ID = ""
+	path := c.Path(`%s/v1/teams/` + id)
+
+	update := updateTeam{
+		Name: team.Name,
+		Role: team.Role,
+	}
+	body, err := json.Marshal(update)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := c.Patch(path, body)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.New("Failed to update team")
+	}
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	var updated Team
+	err = json.Unmarshal(respBody, &updated)
+	if err != nil {
+		return nil, err
+	}
+	if updated.ID == "" {
+		return nil, errors.New("Didn't create a team??" + string(body))
+	}
+
+	return &updated, nil
+}
+
+type updateTeamOwners struct {
+	Owners []string `json:"owners"`
+}
+
+func (c *Client) AddTeamOwners(id string, owners []string) (*Team, error) {
+	path := c.Path(`%s/v1/teams/` + id + `/owners`)
+	update := updateTeamOwners{
+		Owners: owners,
+	}
+
+	body, err := json.Marshal(update)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := c.Post(path, body)
+	if err != nil {
+		return nil, err
+	}
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	var updated Team
+	err = json.Unmarshal(respBody, &updated)
+	if err != nil {
+		return nil, err
+	}
+	if updated.ID == "" {
+		return nil, errors.New("Didn't create a team??" + string(body))
+	}
+
+	return &updated, nil
+}
+
+func (c *Client) RemoveTeamOwners(id string, owners []string) (*Team, error) {
+	path := c.Path(`%s/v1/teams/` + id + `/owners`)
+	update := updateTeamOwners{
+		Owners: owners,
+	}
+
+	body, err := json.Marshal(update)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := c.Delete(path, body)
+	if err != nil {
+		return nil, err
+	}
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	var updated Team
+	err = json.Unmarshal(respBody, &updated)
+	if err != nil {
+		return nil, err
+	}
+	if updated.ID == "" {
+		return nil, errors.New("Didn't create a team??" + string(body))
+	}
+
+	return &updated, nil
+}
+
 type ServiceAccount struct {
 	ID                 string   `json:"id,omitempty"`
 	Name               string   `json:"name"`
@@ -208,4 +329,28 @@ func (c *Client) GetServiceAccount(id string) (*ServiceAccount, error) {
 	}
 
 	return &sa, nil
+}
+
+func (c *Client) UpdateServiceAccount(sa ServiceAccount) error {
+	id := sa.ID
+	if id == "" {
+		return errors.New("Empty ID")
+	}
+	sa.ID = ""
+	path := c.Path(`%s/v1/serviceaccounts/` + id)
+
+	body, err := json.Marshal(sa)
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.Patch(path, body)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusNoContent {
+		return errors.New("Failed to update service account")
+	}
+
+	return nil
 }
