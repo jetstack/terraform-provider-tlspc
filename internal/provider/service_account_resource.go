@@ -201,4 +201,20 @@ func (r *serviceAccountResource) Update(ctx context.Context, req resource.Update
 }
 
 func (r *serviceAccountResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state serviceAccountResourceModel
+
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	err := r.client.DeleteServiceAccount(state.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Deleting Service Account",
+			"Could not delete Service Account ID "+state.ID.ValueString()+": "+err.Error(),
+		)
+		return
+	}
 }

@@ -268,6 +268,22 @@ func (c *Client) RemoveTeamOwners(id string, owners []string) (*Team, error) {
 	return &updated, nil
 }
 
+func (c *Client) DeleteTeam(id string) error {
+	path := c.Path(`%s/v1/teams/` + id)
+
+	resp, err := c.Delete(path, nil)
+	if err != nil {
+		return err
+	}
+	// https://developer.venafi.com/tlsprotectcloud/reference/teams_delete says 204, but we get a 200 back
+	// so accept either, in case behaviour gets fixed to match the docs in the future
+	if resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusOK {
+		return errors.New("Failed to delete team")
+	}
+
+	return nil
+}
+
 type ServiceAccount struct {
 	ID                 string   `json:"id,omitempty"`
 	Name               string   `json:"name"`
@@ -350,6 +366,20 @@ func (c *Client) UpdateServiceAccount(sa ServiceAccount) error {
 	}
 	if resp.StatusCode != http.StatusNoContent {
 		return errors.New("Failed to update service account")
+	}
+
+	return nil
+}
+
+func (c *Client) DeleteServiceAccount(id string) error {
+	path := c.Path(`%s/v1/serviceaccounts/` + id)
+
+	resp, err := c.Delete(path, nil)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusNoContent {
+		return errors.New("Failed to delete service account")
 	}
 
 	return nil
