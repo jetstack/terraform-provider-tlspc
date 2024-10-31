@@ -111,6 +111,35 @@ func (r *teamResource) Create(ctx context.Context, req resource.CreateRequest, r
 }
 
 func (r *teamResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state teamResourceModel
+
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	team, err := r.client.GetTeam(state.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Team",
+			"Could not read team ID "+state.ID.ValueString()+": "+err.Error(),
+		)
+		return
+	}
+
+	state.ID = types.StringValue(team.ID)
+	state.Name = types.StringValue(team.Name)
+	state.Role = types.StringValue(team.Role)
+
+	owners := []types.String{}
+	for _, v := range team.Owners {
+		owners = append(owners, types.StringValue(v))
+	}
+	state.Owners = owners
+
+	diags = resp.State.Set(ctx, state)
+	resp.Diagnostics.Append(diags...)
 }
 
 func (r *teamResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

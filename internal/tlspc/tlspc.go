@@ -123,6 +123,30 @@ func (c *Client) CreateTeam(team Team) (*Team, error) {
 	return &created, nil
 }
 
+func (c *Client) GetTeam(id string) (*Team, error) {
+	path := c.Path(`%s/v1/teams/` + id)
+
+	resp, err := c.Get(path)
+	if err != nil {
+		return nil, err
+	}
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	var team Team
+	err = json.Unmarshal(respBody, &team)
+	if err != nil {
+		return nil, err
+	}
+	if team.ID == "" {
+		return nil, errors.New("Didn't find a Team")
+	}
+
+	return &team, nil
+}
+
 type ServiceAccount struct {
 	ID                 string   `json:"id,omitempty"`
 	Name               string   `json:"name"`
