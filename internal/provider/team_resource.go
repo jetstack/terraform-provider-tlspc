@@ -9,14 +9,16 @@ import (
 
 	"terraform-provider-tlspc/internal/tlspc"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 var (
-	_ resource.Resource              = &teamResource{}
-	_ resource.ResourceWithConfigure = &teamResource{}
+	_ resource.Resource                = &teamResource{}
+	_ resource.ResourceWithConfigure   = &teamResource{}
+	_ resource.ResourceWithImportState = &teamResource{}
 )
 
 type teamResource struct {
@@ -234,4 +236,9 @@ func (r *teamResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 		)
 		return
 	}
+}
+
+func (r *teamResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	// Retrieve import ID and save to id attribute
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

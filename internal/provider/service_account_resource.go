@@ -9,14 +9,16 @@ import (
 
 	"terraform-provider-tlspc/internal/tlspc"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 var (
-	_ resource.Resource              = &serviceAccountResource{}
-	_ resource.ResourceWithConfigure = &serviceAccountResource{}
+	_ resource.Resource                = &serviceAccountResource{}
+	_ resource.ResourceWithConfigure   = &serviceAccountResource{}
+	_ resource.ResourceWithImportState = &serviceAccountResource{}
 )
 
 type serviceAccountResource struct {
@@ -217,4 +219,9 @@ func (r *serviceAccountResource) Delete(ctx context.Context, req resource.Delete
 		)
 		return
 	}
+}
+
+func (r *serviceAccountResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	// Retrieve import ID and save to id attribute
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
