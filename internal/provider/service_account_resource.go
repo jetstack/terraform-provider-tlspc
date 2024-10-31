@@ -126,6 +126,37 @@ func (r *serviceAccountResource) Create(ctx context.Context, req resource.Create
 }
 
 func (r *serviceAccountResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state serviceAccountResourceModel
+
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	sa, err := r.client.GetServiceAccount(state.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Service Account",
+			"Could not read service account ID "+state.ID.ValueString()+": "+err.Error(),
+		)
+		return
+	}
+
+	state.ID = types.StringValue(sa.ID)
+	state.Name = types.StringValue(sa.Name)
+	state.Owner = types.StringValue(sa.Owner)
+	state.PublicKey = types.StringValue(sa.PublicKey)
+	state.CredentialLifetime = types.Int32Value(sa.CredentialLifetime)
+
+	scopes := []types.String{}
+	for _, v := range sa.Scopes {
+		scopes = append(scopes, types.StringValue(v))
+	}
+	state.Scopes = scopes
+
+	diags = resp.State.Set(ctx, state)
+	resp.Diagnostics.Append(diags...)
 }
 
 func (r *serviceAccountResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

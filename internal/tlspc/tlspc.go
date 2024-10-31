@@ -161,3 +161,27 @@ func (c *Client) CreateServiceAccount(sa ServiceAccount) (*ServiceAccount, error
 
 	return &created, nil
 }
+
+func (c *Client) GetServiceAccount(id string) (*ServiceAccount, error) {
+	path := c.Path(`%s/v1/serviceaccounts/` + id)
+
+	resp, err := c.Get(path)
+	if err != nil {
+		return nil, err
+	}
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	var sa ServiceAccount
+	err = json.Unmarshal(respBody, &sa)
+	if err != nil {
+		return nil, err
+	}
+	if sa.ID == "" {
+		return nil, errors.New("Didn't find a Service Account")
+	}
+
+	return &sa, nil
+}
