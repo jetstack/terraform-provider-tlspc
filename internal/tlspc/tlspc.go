@@ -292,6 +292,8 @@ type ServiceAccount struct {
 	CredentialLifetime int32    `json:"credentialLifetime"`
 	PublicKey          string   `json:"publicKey"`
 	AuthenticationType string   `json:"authenticationType"`
+	OciAccountName     string   `json:"ociAccountName"`
+	OciRegistryToken   string   `json:"ociRegistryToken"`
 }
 
 func (c *Client) CreateServiceAccount(sa ServiceAccount) (*ServiceAccount, error) {
