@@ -76,16 +76,16 @@ func (c *Client) GetUser(email string) (*User, error) {
 
 	resp, err := c.Get(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error getting user: %s", err)
 	}
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error reading response body: %s", err)
 	}
 	var users Users
 	err = json.Unmarshal(body, &users)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error decoding response: %s", err)
 	}
 	if len(users.Users) != 1 {
 		return nil, fmt.Errorf("Unexpected number of users returned (%d)", len(users.Users))
@@ -107,25 +107,25 @@ func (c *Client) CreateTeam(team Team) (*Team, error) {
 
 	body, err := json.Marshal(team)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error encoding request: %s", err)
 	}
 
 	resp, err := c.Post(path, body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error posting request: %s", err)
 	}
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error reading response body: %s", err)
 	}
 	var created Team
 	err = json.Unmarshal(respBody, &created)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error decoding response: %s", err)
 	}
 	if created.ID == "" {
-		return nil, errors.New("Didn't create a team??" + string(body))
+		return nil, fmt.Errorf("Didn't create a team; response was: %s", string(respBody))
 	}
 
 	return &created, nil
@@ -136,20 +136,20 @@ func (c *Client) GetTeam(id string) (*Team, error) {
 
 	resp, err := c.Get(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error getting team: %s", err)
 	}
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error reading response body: %s", err)
 	}
 	var team Team
 	err = json.Unmarshal(respBody, &team)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error decoding response: %s", err)
 	}
 	if team.ID == "" {
-		return nil, errors.New("Didn't find a Team")
+		return nil, fmt.Errorf("Didn't find a Team; response was: %s", string(respBody))
 	}
 
 	return &team, nil
@@ -174,27 +174,27 @@ func (c *Client) UpdateTeam(team Team) (*Team, error) {
 	}
 	body, err := json.Marshal(update)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error encoding request: %s", err)
 	}
 
 	resp, err := c.Patch(path, body)
 	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode != http.StatusOK {
-		return nil, errors.New("Failed to update team")
+		return nil, fmt.Errorf("Error patching request: %s", err)
 	}
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error reading response body: %s", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("Failed to update Team; response was: %s", string(respBody))
 	}
 	var updated Team
 	err = json.Unmarshal(respBody, &updated)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error decoding response: %s", err)
 	}
 	if updated.ID == "" {
-		return nil, errors.New("Didn't create a team??" + string(body))
+		return nil, fmt.Errorf("Didn't get a Team ID; response was: %s", string(respBody))
 	}
 
 	return &updated, nil
@@ -212,25 +212,25 @@ func (c *Client) AddTeamOwners(id string, owners []string) (*Team, error) {
 
 	body, err := json.Marshal(update)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error encoding request: %s", err)
 	}
 
 	resp, err := c.Post(path, body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error posting request: %s", err)
 	}
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error reading response body: %s", err)
 	}
 	var updated Team
 	err = json.Unmarshal(respBody, &updated)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error decoding response: %s", err)
 	}
 	if updated.ID == "" {
-		return nil, errors.New("Didn't create a team??" + string(body))
+		return nil, fmt.Errorf("Didn't get a Team ID; response was: %s", string(respBody))
 	}
 
 	return &updated, nil
@@ -244,25 +244,25 @@ func (c *Client) RemoveTeamOwners(id string, owners []string) (*Team, error) {
 
 	body, err := json.Marshal(update)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error encoding request: %s", err)
 	}
 
 	resp, err := c.Delete(path, body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error with delete request: %s", err)
 	}
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error reading response body: %s", err)
 	}
 	var updated Team
 	err = json.Unmarshal(respBody, &updated)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error decoding response: %s", err)
 	}
 	if updated.ID == "" {
-		return nil, errors.New("Didn't create a team??" + string(body))
+		return nil, fmt.Errorf("Didn't get a Team ID; response was: %s", string(respBody))
 	}
 
 	return &updated, nil
@@ -273,12 +273,14 @@ func (c *Client) DeleteTeam(id string) error {
 
 	resp, err := c.Delete(path, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error with delete request: %s", err)
 	}
 	// https://developer.venafi.com/tlsprotectcloud/reference/teams_delete says 204, but we get a 200 back
 	// so accept either, in case behaviour gets fixed to match the docs in the future
 	if resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusOK {
-		return errors.New("Failed to delete team")
+		// returning an error here anyway, no more information if we couldn't read the body
+		respBody, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("Failed to delete team; response was: %s", string(respBody))
 	}
 
 	return nil
@@ -301,25 +303,25 @@ func (c *Client) CreateServiceAccount(sa ServiceAccount) (*ServiceAccount, error
 
 	body, err := json.Marshal(sa)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error encoding request: %s", err)
 	}
 
 	resp, err := c.Post(path, body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error posting request: %s", err)
 	}
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error reading response body: %s", err)
 	}
 	var created ServiceAccount
 	err = json.Unmarshal(respBody, &created)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error decoding response: %s", err)
 	}
 	if created.ID == "" {
-		return nil, errors.New("Didn't create a Service Account??" + string(body))
+		return nil, fmt.Errorf("Didn't create a service account; response was: %s", string(respBody))
 	}
 
 	return &created, nil
@@ -330,20 +332,20 @@ func (c *Client) GetServiceAccount(id string) (*ServiceAccount, error) {
 
 	resp, err := c.Get(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error getting service account: %s", err)
 	}
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error reading response body: %s", err)
 	}
 	var sa ServiceAccount
 	err = json.Unmarshal(respBody, &sa)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error decoding response: %s", err)
 	}
 	if sa.ID == "" {
-		return nil, errors.New("Didn't find a Service Account")
+		return nil, fmt.Errorf("Didn't find a Service Account; response was: %s", string(respBody))
 	}
 
 	return &sa, nil
@@ -359,15 +361,17 @@ func (c *Client) UpdateServiceAccount(sa ServiceAccount) error {
 
 	body, err := json.Marshal(sa)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error encoding request: %s", err)
 	}
 
 	resp, err := c.Patch(path, body)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error patching request: %s", err)
 	}
 	if resp.StatusCode != http.StatusNoContent {
-		return errors.New("Failed to update service account")
+		// returning an error here anyway, no more information if we couldn't read the body
+		respBody, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("Failed to update Service Account; response was: %s", string(respBody))
 	}
 
 	return nil
@@ -378,10 +382,12 @@ func (c *Client) DeleteServiceAccount(id string) error {
 
 	resp, err := c.Delete(path, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error with delete request: %s", err)
 	}
 	if resp.StatusCode != http.StatusNoContent {
-		return errors.New("Failed to delete service account")
+		// returning an error here anyway, no more information if we couldn't read the body
+		respBody, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("Failed to delete Service Account; response was: %s", string(respBody))
 	}
 
 	return nil
