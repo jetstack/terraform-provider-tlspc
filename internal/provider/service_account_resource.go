@@ -49,16 +49,29 @@ func (r *serviceAccountResource) Schema(_ context.Context, _ resource.SchemaRequ
 				Required:    true,
 				ElementType: types.StringType,
 			},
+			// Agent service account
 			"public_key": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 			},
-			/*
-				"privateKey": schema.StringAttribute{
-					Required: true,
-				},
-			*/
 			"credential_lifetime": schema.Int32Attribute{
-				Required: true,
+				Optional: true,
+			},
+			// Issuer service account (jwks)
+			"jwks_uri": schema.StringAttribute{
+				Optional: true,
+			},
+			"issuer_url": schema.StringAttribute{
+				Optional: true,
+			},
+			"audience": schema.StringAttribute{
+				Optional: true,
+			},
+			"subject": schema.StringAttribute{
+				Optional: true,
+			},
+			"applications": schema.SetAttribute{
+				Optional:    true,
+				ElementType: types.StringType,
 			},
 		},
 	}
@@ -84,13 +97,17 @@ func (r *serviceAccountResource) Configure(_ context.Context, req resource.Confi
 }
 
 type serviceAccountResourceModel struct {
-	ID        types.String   `tfsdk:"id"`
-	Name      types.String   `tfsdk:"name"`
-	Owner     types.String   `tfsdk:"owner"`
-	Scopes    []types.String `tfsdk:"scopes"`
-	PublicKey types.String   `tfsdk:"public_key"`
-	//PrivateKey         types.String   `tfsdk:"privateKey"`
-	CredentialLifetime types.Int32 `tfsdk:"credential_lifetime"`
+	ID                 types.String   `tfsdk:"id"`
+	Name               types.String   `tfsdk:"name"`
+	Owner              types.String   `tfsdk:"owner"`
+	Scopes             []types.String `tfsdk:"scopes"`
+	PublicKey          types.String   `tfsdk:"public_key"`
+	CredentialLifetime types.Int32    `tfsdk:"credential_lifetime"`
+	JwksURI            types.String   `tfsdk:"jwks_uri"`
+	IssuerURL          types.String   `tfsdk:"issuer_url"`
+	Audience           types.String   `tfsdk:"audience"`
+	Subject            types.String   `tfsdk:"subject"`
+	Applications       []types.String `tfsdk:"applications"`
 }
 
 func (r *serviceAccountResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -106,12 +123,48 @@ func (r *serviceAccountResource) Create(ctx context.Context, req resource.Create
 	}
 
 	serviceAccount := tlspc.ServiceAccount{
-		Name:               plan.Name.ValueString(),
-		Owner:              plan.Owner.ValueString(),
-		Scopes:             scopes,
-		PublicKey:          plan.PublicKey.ValueString(),
-		CredentialLifetime: plan.CredentialLifetime.ValueInt32(),
-		AuthenticationType: "rsaKey",
+		Name:   plan.Name.ValueString(),
+		Owner:  plan.Owner.ValueString(),
+		Scopes: scopes,
+	}
+
+	configured := false
+	// Agent type
+	if plan.PublicKey.ValueString() != "" || plan.CredentialLifetime.ValueInt32() > 0 {
+		serviceAccount.PublicKey = plan.PublicKey.ValueString()
+		serviceAccount.CredentialLifetime = plan.CredentialLifetime.ValueInt32()
+		serviceAccount.AuthenticationType = "rsaKey"
+		configured = true
+	}
+
+	// Issuer type
+	if plan.JwksURI.ValueString() != "" || plan.IssuerURL.ValueString() != "" || plan.Audience.ValueString() != "" || plan.Subject.ValueString() != "" || len(plan.Applications) > 0 {
+		if serviceAccount.AuthenticationType == "rsaKey" {
+			resp.Diagnostics.AddError(
+				"Error creating serviceAccount",
+				"Could not create serviceAccount, invalid configuration (both public_key and jwks fields present)",
+			)
+			return
+		}
+		serviceAccount.JwksURI = plan.JwksURI.ValueString()
+		serviceAccount.IssuerURL = plan.IssuerURL.ValueString()
+		serviceAccount.Audience = plan.Audience.ValueString()
+		serviceAccount.Subject = plan.Subject.ValueString()
+		serviceAccount.AuthenticationType = "rsaKeyFederated"
+
+		apps := []string{}
+		for _, v := range plan.Applications {
+			apps = append(apps, v.ValueString())
+		}
+		serviceAccount.Applications = apps
+		configured = true
+	}
+	if !configured {
+		resp.Diagnostics.AddError(
+			"Error creating serviceAccount",
+			"Could not create serviceAccount, invalid configuration (neither public_key or jwks fields present)",
+		)
+		return
 	}
 
 	created, err := r.client.CreateServiceAccount(serviceAccount)
@@ -180,13 +233,49 @@ func (r *serviceAccountResource) Update(ctx context.Context, req resource.Update
 	}
 
 	serviceAccount := tlspc.ServiceAccount{
-		ID:                 state.ID.ValueString(),
-		Name:               plan.Name.ValueString(),
-		Owner:              plan.Owner.ValueString(),
-		Scopes:             scopes,
-		PublicKey:          plan.PublicKey.ValueString(),
-		CredentialLifetime: plan.CredentialLifetime.ValueInt32(),
-		AuthenticationType: "rsaKey",
+		ID:     state.ID.ValueString(),
+		Name:   plan.Name.ValueString(),
+		Owner:  plan.Owner.ValueString(),
+		Scopes: scopes,
+	}
+
+	configured := false
+	// Agent type
+	if plan.PublicKey.ValueString() != "" || plan.CredentialLifetime.ValueInt32() > 0 {
+		serviceAccount.PublicKey = plan.PublicKey.ValueString()
+		serviceAccount.CredentialLifetime = plan.CredentialLifetime.ValueInt32()
+		serviceAccount.AuthenticationType = "rsaKey"
+		configured = true
+	}
+
+	// Issuer type
+	if plan.JwksURI.ValueString() != "" || plan.IssuerURL.ValueString() != "" || plan.Audience.ValueString() != "" || plan.Subject.ValueString() != "" || len(plan.Applications) > 0 {
+		if serviceAccount.AuthenticationType == "rsaKey" {
+			resp.Diagnostics.AddError(
+				"Error creating serviceAccount",
+				"Could not create serviceAccount, invalid configuration (both public_key and jwks fields present)",
+			)
+			return
+		}
+		serviceAccount.JwksURI = plan.JwksURI.ValueString()
+		serviceAccount.IssuerURL = plan.IssuerURL.ValueString()
+		serviceAccount.Audience = plan.Audience.ValueString()
+		serviceAccount.Subject = plan.Subject.ValueString()
+		serviceAccount.AuthenticationType = "rsaKeyFederated"
+
+		apps := []string{}
+		for _, v := range plan.Applications {
+			apps = append(apps, v.ValueString())
+		}
+		serviceAccount.Applications = apps
+		configured = true
+	}
+	if !configured {
+		resp.Diagnostics.AddError(
+			"Error creating serviceAccount",
+			"Could not create serviceAccount, invalid configuration (neither public_key or jwks fields present)",
+		)
+		return
 	}
 
 	err := r.client.UpdateServiceAccount(serviceAccount)

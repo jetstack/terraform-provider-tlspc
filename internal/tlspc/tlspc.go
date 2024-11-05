@@ -85,7 +85,7 @@ func (c *Client) GetUser(email string) (*User, error) {
 	var users Users
 	err = json.Unmarshal(body, &users)
 	if err != nil {
-		return nil, fmt.Errorf("Error decoding response: %s", err)
+		return nil, fmt.Errorf("Error decoding response: %s", string(body))
 	}
 	if len(users.Users) != 1 {
 		return nil, fmt.Errorf("Unexpected number of users returned (%d)", len(users.Users))
@@ -122,7 +122,7 @@ func (c *Client) CreateTeam(team Team) (*Team, error) {
 	var created Team
 	err = json.Unmarshal(respBody, &created)
 	if err != nil {
-		return nil, fmt.Errorf("Error decoding response: %s", err)
+		return nil, fmt.Errorf("Error decoding response: %s", string(respBody))
 	}
 	if created.ID == "" {
 		return nil, fmt.Errorf("Didn't create a team; response was: %s", string(respBody))
@@ -146,7 +146,7 @@ func (c *Client) GetTeam(id string) (*Team, error) {
 	var team Team
 	err = json.Unmarshal(respBody, &team)
 	if err != nil {
-		return nil, fmt.Errorf("Error decoding response: %s", err)
+		return nil, fmt.Errorf("Error decoding response: %s", string(respBody))
 	}
 	if team.ID == "" {
 		return nil, fmt.Errorf("Didn't find a Team; response was: %s", string(respBody))
@@ -191,7 +191,7 @@ func (c *Client) UpdateTeam(team Team) (*Team, error) {
 	var updated Team
 	err = json.Unmarshal(respBody, &updated)
 	if err != nil {
-		return nil, fmt.Errorf("Error decoding response: %s", err)
+		return nil, fmt.Errorf("Error decoding response: %s", string(respBody))
 	}
 	if updated.ID == "" {
 		return nil, fmt.Errorf("Didn't get a Team ID; response was: %s", string(respBody))
@@ -227,7 +227,7 @@ func (c *Client) AddTeamOwners(id string, owners []string) (*Team, error) {
 	var updated Team
 	err = json.Unmarshal(respBody, &updated)
 	if err != nil {
-		return nil, fmt.Errorf("Error decoding response: %s", err)
+		return nil, fmt.Errorf("Error decoding response: %s", string(respBody))
 	}
 	if updated.ID == "" {
 		return nil, fmt.Errorf("Didn't get a Team ID; response was: %s", string(respBody))
@@ -259,7 +259,7 @@ func (c *Client) RemoveTeamOwners(id string, owners []string) (*Team, error) {
 	var updated Team
 	err = json.Unmarshal(respBody, &updated)
 	if err != nil {
-		return nil, fmt.Errorf("Error decoding response: %s", err)
+		return nil, fmt.Errorf("Error decoding response: %s", string(respBody))
 	}
 	if updated.ID == "" {
 		return nil, fmt.Errorf("Didn't get a Team ID; response was: %s", string(respBody))
@@ -291,11 +291,16 @@ type ServiceAccount struct {
 	Name               string   `json:"name"`
 	Owner              string   `json:"owner"`
 	Scopes             []string `json:"scopes"`
-	CredentialLifetime int32    `json:"credentialLifetime"`
-	PublicKey          string   `json:"publicKey"`
-	AuthenticationType string   `json:"authenticationType"`
-	OciAccountName     string   `json:"ociAccountName"`
-	OciRegistryToken   string   `json:"ociRegistryToken"`
+	CredentialLifetime int32    `json:"credentialLifetime,omitempty"`
+	PublicKey          string   `json:"publicKey,omitempty"`
+	AuthenticationType string   `json:"authenticationType,omitempty"`
+	OciAccountName     string   `json:"ociAccountName,omitempty"`
+	OciRegistryToken   string   `json:"ociRegistryToken,omitempty"`
+	JwksURI            string   `json:"jwksURI,omitempty"`
+	IssuerURL          string   `json:"issuerURL,omitempty"`
+	Audience           string   `json:"audience,omitempty"`
+	Subject            string   `json:"subject,omitempty"`
+	Applications       []string `json:"applications,omitempty"`
 }
 
 func (c *Client) CreateServiceAccount(sa ServiceAccount) (*ServiceAccount, error) {
@@ -318,7 +323,7 @@ func (c *Client) CreateServiceAccount(sa ServiceAccount) (*ServiceAccount, error
 	var created ServiceAccount
 	err = json.Unmarshal(respBody, &created)
 	if err != nil {
-		return nil, fmt.Errorf("Error decoding response: %s", err)
+		return nil, fmt.Errorf("Error decoding response: %s", string(respBody))
 	}
 	if created.ID == "" {
 		return nil, fmt.Errorf("Didn't create a service account; response was: %s", string(respBody))
@@ -342,7 +347,7 @@ func (c *Client) GetServiceAccount(id string) (*ServiceAccount, error) {
 	var sa ServiceAccount
 	err = json.Unmarshal(respBody, &sa)
 	if err != nil {
-		return nil, fmt.Errorf("Error decoding response: %s", err)
+		return nil, fmt.Errorf("Error decoding response: %s", string(respBody))
 	}
 	if sa.ID == "" {
 		return nil, fmt.Errorf("Didn't find a Service Account; response was: %s", string(respBody))
