@@ -92,6 +92,7 @@ func (p *tlspcProvider) Resources(ctx context.Context) []func() resource.Resourc
 func (p *tlspcProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		NewUserDataSource,
+		NewCAProductDataSource,
 	}
 }
 

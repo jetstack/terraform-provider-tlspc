@@ -505,3 +505,53 @@ func (c *Client) DeletePlugin(id string) error {
 
 	return nil
 }
+
+type CAProductOption struct {
+	ID   string `json:"id"`
+	Name string `json:"productName"`
+}
+
+type CAAccount struct {
+	ID   string `json:"id"`
+	Name string `json:"key"`
+}
+
+type caAccounts struct {
+	Accounts []caAccount `json:"accounts"`
+}
+
+type caAccount struct {
+	Account        CAAccount         `json:"account"`
+	ProductOptions []CAProductOption `json:"productOptions"`
+}
+
+func (c *Client) GetCAProductOption(kind, name, option string) (*CAProductOption, error) {
+	path := c.Path(`%s/v1/certificateauthorities/` + kind + "/accounts")
+
+	resp, err := c.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting user: %s", err)
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading response body: %s", err)
+	}
+	var accounts caAccounts
+	err = json.Unmarshal(body, &accounts)
+	if err != nil {
+		return nil, fmt.Errorf("Error decoding response: %s", string(body))
+	}
+	for _, acc := range accounts.Accounts {
+		acct := acc.Account
+		if acct.Name != name {
+			continue
+		}
+		for _, opt := range acc.ProductOptions {
+			if opt.Name == option {
+				return &opt, nil
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("Specified CA product option not found.")
+}
