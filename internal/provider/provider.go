@@ -86,6 +86,7 @@ func (p *tlspcProvider) Resources(ctx context.Context) []func() resource.Resourc
 		NewServiceAccountResource,
 		NewRegistryAccountResource,
 		NewPluginResource,
+		NewCertificateTemplateResource,
 	}
 }
 

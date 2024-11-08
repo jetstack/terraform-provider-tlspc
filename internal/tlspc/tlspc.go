@@ -54,6 +54,10 @@ func (c *Client) Post(path string, body []byte) (*http.Response, error) {
 	return c.doRequest("POST", path, body)
 }
 
+func (c *Client) Put(path string, body []byte) (*http.Response, error) {
+	return c.doRequest("PUT", path, body)
+}
+
 func (c *Client) Patch(path string, body []byte) (*http.Response, error) {
 	return c.doRequest("PATCH", path, body)
 }
@@ -507,8 +511,20 @@ func (c *Client) DeletePlugin(id string) error {
 }
 
 type CAProductOption struct {
-	ID   string `json:"id"`
-	Name string `json:"productName"`
+	ID      string           `json:"id"`
+	Name    string           `json:"productName"`
+	Details CAProductDetails `json:"productDetails"`
+}
+
+type CAProductDetails struct {
+	Template CAProductTemplate `json:"productTemplate"`
+}
+
+type CAProductTemplate struct {
+	CertificateAuthority string   `json:"certificateAuthority"`
+	ProductName          string   `json:"productName"`
+	ProductTypes         []string `json:"productTypes"`
+	ValidityPeriod       string   `json:"validityPeriod"`
 }
 
 type CAAccount struct {
@@ -530,7 +546,7 @@ func (c *Client) GetCAProductOption(kind, name, option string) (*CAProductOption
 
 	resp, err := c.Get(path)
 	if err != nil {
-		return nil, fmt.Errorf("Error getting user: %s", err)
+		return nil, fmt.Errorf("Error getting ca product: %s", err)
 	}
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -554,4 +570,164 @@ func (c *Client) GetCAProductOption(kind, name, option string) (*CAProductOption
 	}
 
 	return nil, fmt.Errorf("Specified CA product option not found.")
+}
+
+func (c *Client) GetCAProductOptionByID(kind, option_id string) (*CAProductOption, error) {
+	path := c.Path(`%s/v1/certificateauthorities/` + kind + "/accounts")
+
+	resp, err := c.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting ca product: %s", err)
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading response body: %s", err)
+	}
+	var accounts caAccounts
+	err = json.Unmarshal(body, &accounts)
+	if err != nil {
+		return nil, fmt.Errorf("Error decoding response: %s", string(body))
+	}
+	for _, acc := range accounts.Accounts {
+		for _, opt := range acc.ProductOptions {
+			if opt.ID == option_id {
+				return &opt, nil
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("Specified CA product option not found.")
+}
+
+type KeyType struct {
+	Type       string   `json:"keyType"`
+	KeyLengths []int32  `json:"keyLengths,omitempty"`
+	KeyCurves  []string `json:"keyCurves,omitempty"`
+}
+
+type CertificateTemplate struct {
+	ID                                  string            `json:"id,omitempty"`
+	Name                                string            `json:"name"`
+	CertificateAuthorityType            string            `json:"certificateAuthority"`
+	CertificateAuthorityProductOptionID string            `json:"certificateAuthorityProductOptionId"`
+	KeyReuse                            bool              `json:"keyReuse"`
+	KeyTypes                            []KeyType         `json:"keyTypes"`
+	Product                             CAProductTemplate `json:"product"`
+	SANRegexes                          []string          `json:"sanRegexes"`
+	SubjectCNRegexes                    []string          `json:"subjectCNRegexes"`
+	SubjectCValues                      []string          `json:"subjectCValues"`
+	SubjectLRegexes                     []string          `json:"subjectLRegexes"`
+	SubjectORegexes                     []string          `json:"subjectORegexes"`
+	SubjectOURegexes                    []string          `json:"subjectOURegexes"`
+	SubjectSTRegexes                    []string          `json:"subjectSTRegexes"`
+}
+
+type certificateTemplates struct {
+	Templates []CertificateTemplate `json:"certificateIssuingTemplates"`
+}
+
+func (c *Client) CreateCertificateTemplate(ct CertificateTemplate) (*CertificateTemplate, error) {
+	path := c.Path(`%s/v1/certificateissuingtemplates`)
+
+	body, err := json.Marshal(ct)
+	if err != nil {
+		return nil, fmt.Errorf("Error encoding request: %s", err)
+	}
+
+	resp, err := c.Post(path, body)
+	if err != nil {
+		return nil, fmt.Errorf("Error posting request: %s", err)
+	}
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading response body: %s", err)
+	}
+	var created certificateTemplates
+	err = json.Unmarshal(respBody, &created)
+	if err != nil {
+		return nil, fmt.Errorf("Error decoding response: %s", string(respBody))
+	}
+	if len(created.Templates) != 1 {
+		return nil, fmt.Errorf("Unexpected number of templates returned (%d): %s %s", len(created.Templates), string(respBody), string(body))
+	}
+	if created.Templates[0].ID == "" {
+		return nil, fmt.Errorf("Didn't create a template; response was: %s", string(respBody))
+	}
+
+	return &created.Templates[0], nil
+}
+
+func (c *Client) GetCertificateTemplate(id string) (*CertificateTemplate, error) {
+	path := c.Path(`%s/v1/certificateissuingtemplates/` + id)
+
+	resp, err := c.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting certificate template: %s", err)
+	}
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading response body: %s", err)
+	}
+	var ct CertificateTemplate
+	err = json.Unmarshal(respBody, &ct)
+	if err != nil {
+		return nil, fmt.Errorf("Error decoding response: %s", string(respBody))
+	}
+	if ct.ID == "" {
+		return nil, fmt.Errorf("Didn't find a Certificate Template; response was: %s", string(respBody))
+	}
+
+	return &ct, nil
+}
+
+func (c *Client) UpdateCertificateTemplate(ct CertificateTemplate) (*CertificateTemplate, error) {
+	id := ct.ID
+	if id == "" {
+		return nil, errors.New("Empty ID")
+	}
+	ct.ID = ""
+	path := c.Path(`%s/v1/certificateissuingtemplates/` + id)
+
+	body, err := json.Marshal(ct)
+	if err != nil {
+		return nil, fmt.Errorf("Error encoding request: %s", err)
+	}
+
+	resp, err := c.Put(path, body)
+	if err != nil {
+		return nil, fmt.Errorf("Error patching request: %s", err)
+	}
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading response body: %s", err)
+	}
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
+		return nil, fmt.Errorf("Failed to update certificate template; response was: %s", string(respBody))
+	}
+
+	var updated CertificateTemplate
+	err = json.Unmarshal(respBody, &updated)
+	if err != nil {
+		return nil, fmt.Errorf("Error decoding response: %s", string(respBody))
+	}
+
+	return &updated, nil
+}
+
+func (c *Client) DeleteCertificateTemplate(id string) error {
+	path := c.Path(`%s/v1/certificateissuingtemplates/` + id)
+
+	resp, err := c.Delete(path, nil)
+	if err != nil {
+		return fmt.Errorf("Error with delete request: %s", err)
+	}
+	if resp.StatusCode != http.StatusNoContent {
+		// returning an error here anyway, no more information if we couldn't read the body
+		respBody, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("Failed to delete certificate template; response was: %s", string(respBody))
+	}
+
+	return nil
 }
