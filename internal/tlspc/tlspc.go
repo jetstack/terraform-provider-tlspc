@@ -731,3 +731,129 @@ func (c *Client) DeleteCertificateTemplate(id string) error {
 
 	return nil
 }
+
+type OwnerAndType struct {
+	ID   string `json:"ownerId"`
+	Type string `json:"ownerType"`
+}
+
+type Application struct {
+	ID                   string            `json:"id,omitempty"`
+	Name                 string            `json:"name"`
+	Owners               []OwnerAndType    `json:"ownerIdsAndTypes"`
+	CertificateTemplates map[string]string `json:"certificateIssuingTemplateAliasIdMap"`
+	FQDNs                []string          `json:"fqdns"`
+	InternalPorts        []string          `json:"internalPorts"`
+	IPRanges             []string          `json:"ipRanges"`
+	Ports                []string          `json:"ports"`
+}
+
+type applications struct {
+	Applications []Application `json:"applications"`
+}
+
+func (c *Client) CreateApplication(app Application) (*Application, error) {
+	path := c.Path(`%s/outagedetection/v1/applications`)
+
+	body, err := json.Marshal(app)
+	if err != nil {
+		return nil, fmt.Errorf("Error encoding request: %s", err)
+	}
+
+	resp, err := c.Post(path, body)
+	if err != nil {
+		return nil, fmt.Errorf("Error posting request: %s", err)
+	}
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading response body: %s", err)
+	}
+	var created applications
+	err = json.Unmarshal(respBody, &created)
+	if err != nil {
+		return nil, fmt.Errorf("Error decoding response: %s", string(respBody))
+	}
+	if len(created.Applications) != 1 {
+		return nil, fmt.Errorf("Unexpected number of applications returned (%d): %s %s", len(created.Applications), string(respBody), string(body))
+	}
+	if created.Applications[0].ID == "" {
+		return nil, fmt.Errorf("Didn't create a application; response was: %s", string(respBody))
+	}
+
+	return &created.Applications[0], nil
+}
+
+func (c *Client) GetApplication(id string) (*Application, error) {
+	path := c.Path(`%s/outagedetection/v1/applications/` + id)
+
+	resp, err := c.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting application: %s", err)
+	}
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading response body: %s", err)
+	}
+	var app Application
+	err = json.Unmarshal(respBody, &app)
+	if err != nil {
+		return nil, fmt.Errorf("Error decoding response: %s", string(respBody))
+	}
+	if app.ID == "" {
+		return nil, fmt.Errorf("Didn't find a Application; response was: %s", string(respBody))
+	}
+
+	return &app, nil
+}
+
+func (c *Client) UpdateApplication(app Application) (*Application, error) {
+	id := app.ID
+	if id == "" {
+		return nil, errors.New("Empty ID")
+	}
+	app.ID = ""
+	path := c.Path(`%s/outagedetection/v1/applications/` + id)
+
+	body, err := json.Marshal(app)
+	if err != nil {
+		return nil, fmt.Errorf("Error encoding request: %s", err)
+	}
+
+	resp, err := c.Put(path, body)
+	if err != nil {
+		return nil, fmt.Errorf("Error patching request: %s", err)
+	}
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading response body: %s", err)
+	}
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
+		return nil, fmt.Errorf("Failed to update application; response was: %s", string(respBody))
+	}
+
+	var updated Application
+	err = json.Unmarshal(respBody, &updated)
+	if err != nil {
+		return nil, fmt.Errorf("Error decoding response: %s", string(respBody))
+	}
+
+	return &updated, nil
+}
+
+func (c *Client) DeleteApplication(id string) error {
+	path := c.Path(`%s/outagedetection/v1/applications/` + id)
+
+	resp, err := c.Delete(path, nil)
+	if err != nil {
+		return fmt.Errorf("Error with delete request: %s", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		// returning an error here anyway, no more information if we couldn't read the body
+		respBody, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("Failed to delete certificate template; response was: %s", string(respBody))
+	}
+
+	return nil
+}
