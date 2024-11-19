@@ -397,3 +397,111 @@ func (c *Client) DeleteServiceAccount(id string) error {
 
 	return nil
 }
+
+type Plugin struct {
+	ID       string `json:"id,omitempty"`
+	Type     string `json:"pluginType"`
+	Manifest any    `json:"manifest"`
+}
+
+type plugins struct {
+	Plugins []Plugin `json:"plugins"`
+}
+
+func (c *Client) CreatePlugin(p Plugin) (*Plugin, error) {
+	path := c.Path(`%s/v1/plugins`)
+
+	body, err := json.Marshal(p)
+	if err != nil {
+		return nil, fmt.Errorf("Error encoding request: %s", err)
+	}
+
+	resp, err := c.Post(path, body)
+	if err != nil {
+		return nil, fmt.Errorf("Error posting request: %s", err)
+	}
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading response body: %s", err)
+	}
+	var created plugins
+	err = json.Unmarshal(respBody, &created)
+	if err != nil {
+		return nil, fmt.Errorf("Error decoding response: %s", string(respBody))
+	}
+	if len(created.Plugins) != 1 {
+		return nil, fmt.Errorf("Unexpected number of plugins returned (%d): %s", len(created.Plugins), string(respBody))
+	}
+	if created.Plugins[0].ID == "" {
+		return nil, fmt.Errorf("Didn't create a plugin; response was: %s", string(respBody))
+	}
+
+	return &created.Plugins[0], nil
+}
+
+func (c *Client) GetPlugin(id string) (*Plugin, error) {
+	path := c.Path(`%s/v1/plugins/` + id)
+
+	resp, err := c.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting plugin: %s", err)
+	}
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading response body: %s", err)
+	}
+	var plugin Plugin
+	err = json.Unmarshal(respBody, &plugin)
+	if err != nil {
+		return nil, fmt.Errorf("Error decoding response: %s", string(respBody))
+	}
+	if plugin.ID == "" {
+		return nil, fmt.Errorf("Didn't find a Plugin; response was: %s", string(respBody))
+	}
+
+	return &plugin, nil
+}
+
+func (c *Client) UpdatePlugin(p Plugin) error {
+	id := p.ID
+	if id == "" {
+		return errors.New("Empty ID")
+	}
+	p.ID = ""
+	path := c.Path(`%s/v1/plugins/` + id)
+
+	body, err := json.Marshal(p)
+	if err != nil {
+		return fmt.Errorf("Error encoding request: %s", err)
+	}
+
+	resp, err := c.Patch(path, body)
+	if err != nil {
+		return fmt.Errorf("Error patching request: %s", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		// returning an error here anyway, no more information if we couldn't read the body
+		respBody, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("Failed to update Plugin; response was: %s", string(respBody))
+	}
+
+	return nil
+}
+
+func (c *Client) DeletePlugin(id string) error {
+	path := c.Path(`%s/v1/plugins/` + id)
+
+	resp, err := c.Delete(path, nil)
+	if err != nil {
+		return fmt.Errorf("Error with delete request: %s", err)
+	}
+	if resp.StatusCode != http.StatusNoContent {
+		// returning an error here anyway, no more information if we couldn't read the body
+		respBody, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("Failed to delete Plugin; response was: %s", string(respBody))
+	}
+
+	return nil
+}
