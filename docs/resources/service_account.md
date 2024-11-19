@@ -17,11 +17,19 @@ description: |-
 
 ### Required
 
-- `credential_lifetime` (Number)
 - `name` (String)
 - `owner` (String)
-- `public_key` (String)
 - `scopes` (Set of String)
+
+### Optional
+
+- `applications` (Set of String)
+- `audience` (String)
+- `credential_lifetime` (Number)
+- `issuer_url` (String)
+- `jwks_uri` (String)
+- `public_key` (String)
+- `subject` (String)
 
 ### Read-Only
 
