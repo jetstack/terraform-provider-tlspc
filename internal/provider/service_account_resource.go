@@ -258,9 +258,13 @@ func (r *serviceAccountResource) Update(ctx context.Context, req resource.Update
 			return
 		}
 		serviceAccount.JwksURI = plan.JwksURI.ValueString()
-		serviceAccount.IssuerURL = plan.IssuerURL.ValueString()
+		if state.IssuerURL.ValueString() != plan.IssuerURL.ValueString() {
+			serviceAccount.IssuerURL = plan.IssuerURL.ValueString()
+		}
 		serviceAccount.Audience = plan.Audience.ValueString()
-		serviceAccount.Subject = plan.Subject.ValueString()
+		if state.Subject.ValueString() != plan.Subject.ValueString() {
+			serviceAccount.Subject = plan.Subject.ValueString()
+		}
 		serviceAccount.AuthenticationType = "rsaKeyFederated"
 
 		apps := []string{}
