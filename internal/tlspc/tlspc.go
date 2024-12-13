@@ -17,9 +17,10 @@ const DefaultEndpoint = "https://api.venafi.cloud"
 type Client struct {
 	apikey   string
 	endpoint string
+	version  string
 }
 
-func NewClient(apikey, endpoint string) (*Client, error) {
+func NewClient(apikey, endpoint, version string) (*Client, error) {
 	if endpoint == "" {
 		endpoint = DefaultEndpoint
 	}
@@ -27,6 +28,7 @@ func NewClient(apikey, endpoint string) (*Client, error) {
 	return &Client{
 		apikey:   apikey,
 		endpoint: endpoint,
+		version:  version,
 	}, nil
 }
 
@@ -37,6 +39,7 @@ func (c *Client) doRequest(method, path string, body []byte) (*http.Response, er
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("tppl-api-key", c.apikey)
+	req.Header.Set("User-Agent", "terraform-provider-tlspc/"+c.version)
 
 	client := http.Client{}
 	return client.Do(req)

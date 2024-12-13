@@ -74,7 +74,7 @@ func (p *tlspcProvider) Configure(ctx context.Context, req provider.ConfigureReq
 		endpoint = config.Endpoint.ValueString()
 	}
 
-	client, _ := tlspc.NewClient(apikey, endpoint)
+	client, _ := tlspc.NewClient(apikey, endpoint, p.version)
 
 	resp.DataSourceData = client
 	resp.ResourceData = client
