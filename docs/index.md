@@ -13,8 +13,9 @@ description: |-
 ## Example Usage
 
 ```terraform
-provider "scaffolding" {
-  # example configuration here
+provider "tlspc" {
+  apikey   = ""
+  endpoint = "https://api.venafi.eu"
 }
 ```
 
