@@ -206,8 +206,24 @@ func (r *serviceAccountResource) Read(ctx context.Context, req resource.ReadRequ
 	state.ID = types.StringValue(sa.ID)
 	state.Name = types.StringValue(sa.Name)
 	state.Owner = types.StringValue(sa.Owner)
-	state.PublicKey = types.StringValue(sa.PublicKey)
-	state.CredentialLifetime = types.Int32Value(sa.CredentialLifetime)
+	if sa.PublicKey != state.PublicKey.ValueString() {
+		state.PublicKey = types.StringValue(sa.PublicKey)
+	}
+	if sa.CredentialLifetime != state.CredentialLifetime.ValueInt32() {
+		state.CredentialLifetime = types.Int32Value(sa.CredentialLifetime)
+	}
+	if sa.JwksURI != state.JwksURI.ValueString() {
+		state.JwksURI = types.StringValue(sa.JwksURI)
+	}
+	if sa.IssuerURL != state.IssuerURL.ValueString() {
+		state.IssuerURL = types.StringValue(sa.IssuerURL)
+	}
+	if sa.Audience != state.Audience.ValueString() {
+		state.Audience = types.StringValue(sa.Audience)
+	}
+	if sa.Subject != state.Subject.ValueString() {
+		state.Subject = types.StringValue(sa.Subject)
+	}
 
 	scopes := []types.String{}
 	for _, v := range sa.Scopes {
