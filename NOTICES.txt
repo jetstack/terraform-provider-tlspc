@@ -2,14 +2,14 @@ Copyright ©2025 Venafi, Inc. All rights reserved
 
 terraform-provider-tlspc is using the following open source components:
 
-1. hashicorp/terraform-provider-scaffolding-framework (https://github.com/hashicorp/terraform-provider-scaffolding-framework) : Mozilla Public License 2.0
+A. hashicorp/terraform-provider-scaffolding-framework (https://github.com/hashicorp/terraform-provider-scaffolding-framework) : Mozilla Public License 2.0
          Copyright (c) 2021 HashiCorp, Inc.
 
-2. hashicorp/terraform-plugin-framework-jsontypes (https://github.com/hashicorp/terraform-plugin-framework-jsontypes) : Mozilla Public License 2.0
+B. hashicorp/terraform-plugin-framework-jsontypes (https://github.com/hashicorp/terraform-plugin-framework-jsontypes) : Mozilla Public License 2.0
          Copyright (c) 2023 HashiCorp, Inc.
 
 
-1. Mozilla Public License 2.0
+A. Mozilla Public License 2.0
 =================
 Copyright (c) 2021 HashiCorp, Inc.
 
@@ -388,7 +388,7 @@ Exhibit B - "Incompatible With Secondary Licenses" Notice
 
 
 
-2. Mozilla Public License 2.0
+B. Mozilla Public License 2.0
 =========================
 Copyright (c) 2023 HashiCorp, Inc.
 
