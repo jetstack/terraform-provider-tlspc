@@ -11,6 +11,7 @@ lint:
 
 generate:
 	cd tools; go generate ./...
+	cd internal; go generate ./...
 
 fmt:
 	gofmt -s -w -e .
