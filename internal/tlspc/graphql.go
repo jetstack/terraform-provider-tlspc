@@ -219,3 +219,40 @@ func (c *Client) DeleteCloudProviderGCP(ctx context.Context, id string) error {
 
 	return err
 }
+
+func (c *Client) GetCloudProviderGCPValidation(ctx context.Context, id string) (bool, error) {
+	gql := c.GetGraphQLClient()
+
+	cpId, err := uuid.Parse(id)
+	if err != nil {
+		return false, err
+	}
+
+	resp, err := graphql.GetGCPProviderDetails(ctx, gql, cpId)
+	if err != nil {
+		return false, err
+	}
+
+	details, ok := resp.CloudProviderDetails.(*graphql.GetGCPProviderDetailsCloudProviderDetailsGCPProviderDetails)
+	if !ok {
+		return false, errors.New("Error retrieving GCP CloudProvider status")
+	}
+
+	return details.CloudProvider.Status == graphql.CloudProviderStatusValidated, nil
+}
+
+func (c *Client) ValidateCloudProviderGCP(ctx context.Context, id string) (bool, error) {
+	gql := c.GetGraphQLClient()
+
+	cpId, err := uuid.Parse(id)
+	if err != nil {
+		return false, err
+	}
+
+	resp, err := graphql.ValidateGCPProvider(ctx, gql, cpId)
+	if err != nil {
+		return false, err
+	}
+
+	return resp.ValidateCloudProvider.Result == graphql.CloudProviderStatusValidated, nil
+}
