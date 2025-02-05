@@ -89,6 +89,7 @@ func (p *tlspcProvider) Resources(ctx context.Context) []func() resource.Resourc
 		NewCertificateTemplateResource,
 		NewApplicationResource,
 		NewCloudProviderGCPResource,
+		NewCloudProviderGCPValidateResource,
 	}
 }
 
