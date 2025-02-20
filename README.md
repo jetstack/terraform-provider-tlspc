@@ -27,4 +27,4 @@ To compile the provider, run `go install`. This will build the provider and put 
 
 To generate or update documentation, run `make generate`.
 
-In order to test your local build, you will need to setup a [`dev_override`](https://developer.hashicorp.com/terraform/tutorials/providers-plugin-framework/providers-plugin-framework-provider#prepare-terraform-for-local-provider-install). The provider address is `venafi.com/dev/tlspc`.
+In order to test your local build, you will need to setup a [`dev_override`](https://developer.hashicorp.com/terraform/tutorials/providers-plugin-framework/providers-plugin-framework-provider#prepare-terraform-for-local-provider-install). The provider address is `registry.terraform.io/jetstack/tlspc`.
