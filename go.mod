@@ -3,7 +3,7 @@ module terraform-provider-tlspc
 go 1.22.7
 
 require (
-	github.com/hashicorp/terraform-plugin-framework v1.14.0
+	github.com/hashicorp/terraform-plugin-framework v1.14.1
 	github.com/hashicorp/terraform-plugin-framework-jsontypes v0.2.0
 )
 
