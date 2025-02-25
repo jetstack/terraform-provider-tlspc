@@ -42,6 +42,17 @@ func (p *tlspcProvider) Metadata(ctx context.Context, req provider.MetadataReque
 
 func (p *tlspcProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: `
+## Provider for the Venafi TLS Protect Cloud Platform
+
+This provider allows you to manage resources within the Venafi TLS Protect Cloud Platform.
+It's at an early stage of development; for production workloads, please ensure that versions are locked and upgrades considered to avoid breaking changes.
+
+### Usage
+
+We recommend that you create a custom user with the [permissions required](https://docs.venafi.cloud/vaas/user-management/about-user-roles/) to manage the necessary resources, and use this user for performing terraform operations.
+`,
+		Description: "Provider for the Venafi TLS Protect Cloud Platform",
 		Attributes: map[string]schema.Attribute{
 			"apikey": schema.StringAttribute{
 				MarkdownDescription: "API Key",
