@@ -59,9 +59,11 @@ func (d *userDataSource) Metadata(_ context.Context, req datasource.MetadataRequ
 // Schema defines the schema for the data source.
 func (d *userDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Look up a user id by email address",
 		Attributes: map[string]schema.Attribute{
 			"email": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "User email address",
 			},
 			"id": schema.StringAttribute{
 				Computed: true,

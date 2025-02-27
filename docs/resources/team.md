@@ -25,9 +25,14 @@ resource "tlspc_team" "app_team_1" {
 
 ### Required
 
-- `name` (String)
-- `owners` (Set of String)
-- `role` (String)
+- `name` (String) Name
+- `owners` (Set of String) List of user ids
+- `role` (String) Role of team, valid options include:
+    * SYSTEM_ADMIN
+    * PKI_ADMIN
+    * PLATFORM_ADMIN
+    * RESOURCE_OWNER
+    * GUEST
 
 ### Read-Only
 
