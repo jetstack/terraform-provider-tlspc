@@ -3,12 +3,12 @@
 page_title: "tlspc_user Data Source - tlspc"
 subcategory: ""
 description: |-
-  
+  Look up a user id by email address
 ---
 
 # tlspc_user (Data Source)
 
-
+Look up a user id by email address
 
 ## Example Usage
 
@@ -23,7 +23,7 @@ data "tlspc_user" "example" {
 
 ### Required
 
-- `email` (String)
+- `email` (String) User email address
 
 ### Read-Only
 
