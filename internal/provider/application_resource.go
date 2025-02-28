@@ -46,19 +46,23 @@ func (r *applicationResource) Schema(_ context.Context, _ resource.SchemaRequest
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				MarkdownDescription: "The ID of this resource",
 			},
 			"name": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "The name of the application",
 			},
 			"owners": schema.SetAttribute{
 				Required: true,
 				ElementType: basetypes.MapType{
 					ElemType: types.StringType,
 				},
+				MarkdownDescription: "A map of owner ids, see example for format",
 			},
 			"ca_template_aliases": schema.MapAttribute{
-				Required:    true,
-				ElementType: types.StringType,
+				Required:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: "CA Template alias-to-id mapping for templates available to this application, see example for format",
 			},
 		},
 	}
