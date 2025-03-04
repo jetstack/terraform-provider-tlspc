@@ -3,12 +3,12 @@
 page_title: "tlspc_ca_product Data Source - tlspc"
 subcategory: ""
 description: |-
-  
+  Look up the ID of a Certificate Authority Product Option
 ---
 
 # tlspc_ca_product (Data Source)
 
-
+Look up the ID of a Certificate Authority Product Option
 
 ## Example Usage
 
@@ -25,9 +25,19 @@ data "tlspc_ca_product" "built_in" {
 
 ### Required
 
-- `ca_name` (String)
-- `product_option` (String)
-- `type` (String)
+- `ca_name` (String) Name of Certificate Authority
+- `product_option` (String) Name of Product Option
+- `type` (String) Type of Certificate Authority, valid values include:
+    * BUILTIN
+    * DIGICERT
+    * GLOBALSIGN
+    * ENTRUST
+    * MICROSOFT
+    * ACME
+    * ZTPKI
+    * GLOBALSIGNMSSL
+    * TPP
+    * CONNECTOR
 
 ### Read-Only
 
