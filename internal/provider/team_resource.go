@@ -45,14 +45,22 @@ func (r *teamResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 				},
 			},
 			"name": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "Name",
 			},
 			"role": schema.StringAttribute{
 				Required: true,
+				MarkdownDescription: `Role of team, valid options include:
+    * SYSTEM_ADMIN
+    * PKI_ADMIN
+    * PLATFORM_ADMIN
+    * RESOURCE_OWNER
+    * GUEST`,
 			},
 			"owners": schema.SetAttribute{
-				Required:    true,
-				ElementType: types.StringType,
+				Required:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: "List of user ids",
 			},
 		},
 	}
