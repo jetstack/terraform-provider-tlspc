@@ -37,6 +37,7 @@ func (r *registryAccountResource) Metadata(_ context.Context, req resource.Metad
 
 func (r *registryAccountResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Manage pull credentials for the Venafi OCI private registry",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,
@@ -45,24 +46,35 @@ func (r *registryAccountResource) Schema(_ context.Context, _ resource.SchemaReq
 				},
 			},
 			"name": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "The name of the service account",
 			},
 			"owner": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "ID of the team that owns this service account",
 			},
 			"scopes": schema.SetAttribute{
 				Required:    true,
 				ElementType: types.StringType,
+				MarkdownDescription: `A list of the images that this service account is authorised to access; valid options include:
+    * oci-registry-cm
+    * oci-registry-cm-ape
+    * oci-registry-cm-vei
+    * oci-registry-cm-os
+`,
 			},
 			"oci_account_name": schema.StringAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: "Generated OCI account name",
 			},
 			"oci_registry_token": schema.StringAttribute{
-				Computed:  true,
-				Sensitive: true,
+				Computed:            true,
+				Sensitive:           true,
+				MarkdownDescription: "Generated OCI registry token",
 			},
 			"credential_lifetime": schema.Int32Attribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "Credential Lifetime in days",
 			},
 		},
 	}
