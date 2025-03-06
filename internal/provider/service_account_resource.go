@@ -43,40 +43,55 @@ func (r *serviceAccountResource) Schema(_ context.Context, _ resource.SchemaRequ
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				MarkdownDescription: "The ID of this resource",
 			},
 			"name": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "The name of the service account",
 			},
 			"owner": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "ID of the team that owns this service account",
 			},
 			"scopes": schema.SetAttribute{
 				Required:    true,
 				ElementType: types.StringType,
+				MarkdownDescription: `
+A list of scopes that this service account is authorised for. Available options include:
+    * certificate-issuance
+    * kubernetes-discovery
+`,
 			},
 			// Agent service account
 			"public_key": schema.StringAttribute{
-				Optional: true,
+				Optional:            true,
+				MarkdownDescription: "Public Key",
 			},
 			"credential_lifetime": schema.Int32Attribute{
-				Optional: true,
+				Optional:            true,
+				MarkdownDescription: "Credential Lifetime in days (required for public_key type service accounts)",
 			},
 			// Issuer service account (jwks)
 			"jwks_uri": schema.StringAttribute{
-				Optional: true,
+				Optional:            true,
+				MarkdownDescription: "The JWKS URI for a Workload Identity Federation (WIF) type service account",
 			},
 			"issuer_url": schema.StringAttribute{
-				Optional: true,
+				Optional:            true,
+				MarkdownDescription: "Issuer URL for a WIF type service account",
 			},
 			"audience": schema.StringAttribute{
-				Optional: true,
+				Optional:            true,
+				MarkdownDescription: "Audience for a WIF type service account",
 			},
 			"subject": schema.StringAttribute{
-				Optional: true,
+				Optional:            true,
+				MarkdownDescription: "Subject for a WIF type service account",
 			},
 			"applications": schema.SetAttribute{
-				Optional:    true,
-				ElementType: types.StringType,
+				Optional:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: "List of Applications which this service account is authorised for",
 			},
 		},
 	}
