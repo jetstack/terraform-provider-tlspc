@@ -59,18 +59,32 @@ func (d *caProductDataSource) Metadata(_ context.Context, req datasource.Metadat
 // Schema defines the schema for the data source.
 func (d *caProductDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Look up the ID of a Certificate Authority Product Option",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
 			"type": schema.StringAttribute{
 				Required: true,
+				MarkdownDescription: `Type of Certificate Authority, valid values include:
+    * BUILTIN
+    * DIGICERT
+    * GLOBALSIGN
+    * ENTRUST
+    * MICROSOFT
+    * ACME
+    * ZTPKI
+    * GLOBALSIGNMSSL
+    * TPP
+    * CONNECTOR`,
 			},
 			"ca_name": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "Name of Certificate Authority",
 			},
 			"product_option": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "Name of Product Option",
 			},
 		},
 	}
