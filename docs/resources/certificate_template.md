@@ -3,12 +3,18 @@
 page_title: "tlspc_certificate_template Resource - tlspc"
 subcategory: ""
 description: |-
-  
+  Manage Certificate Issuing Template
+  [!Note]Currently only a limited subset of attributes are supported.All Common Name/SAN/CSR validation fields are set to .* (allow all).Permitted Key Algorithms are set to RSA 2048/3072/4096.
 ---
 
 # tlspc_certificate_template (Resource)
 
+Manage Certificate Issuing Template
 
+> [!Note]
+> Currently only a limited subset of attributes are supported.
+> All Common Name/SAN/CSR validation fields are set to `.*` (allow all).
+> Permitted Key Algorithms are set to RSA 2048/3072/4096.
 
 ## Example Usage
 
@@ -26,10 +32,10 @@ resource "tlspc_certificate_template" "built_in" {
 
 ### Required
 
-- `ca_product_id` (String)
-- `ca_type` (String)
-- `key_reuse` (Boolean)
-- `name` (String)
+- `ca_product_id` (String) The ID of a Certificate Authority Product Option
+- `ca_type` (String) Type of Certificate Authority (see Certificate Authority Product Option data source)
+- `key_reuse` (Boolean) Allow Private Key Reuse
+- `name` (String) Name of the Certificate Issuing Template
 
 ### Read-Only
 

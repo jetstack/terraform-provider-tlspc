@@ -37,6 +37,13 @@ func (r *certificateTemplateResource) Metadata(_ context.Context, req resource.M
 
 func (r *certificateTemplateResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: `Manage Certificate Issuing Template
+
+> [!Note]
+> Currently only a limited subset of attributes are supported.
+> All Common Name/SAN/CSR validation fields are set to ` + "`.*` (allow all)." + `
+> Permitted Key Algorithms are set to RSA 2048/3072/4096.
+`,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,
@@ -45,16 +52,20 @@ func (r *certificateTemplateResource) Schema(_ context.Context, _ resource.Schem
 				},
 			},
 			"name": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "Name of the Certificate Issuing Template",
 			},
 			"ca_type": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "Type of Certificate Authority (see Certificate Authority Product Option data source)",
 			},
 			"ca_product_id": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "The ID of a Certificate Authority Product Option",
 			},
 			"key_reuse": schema.BoolAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "Allow Private Key Reuse",
 			},
 			/*
 				"key_types": schema.SetAttribute{
