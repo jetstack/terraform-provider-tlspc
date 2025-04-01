@@ -1,7 +1,6 @@
 module tools
 
 go 1.24.1
-
 require (
 	github.com/hashicorp/copywrite v0.20.0
 	github.com/hashicorp/terraform-plugin-docs v0.19.4
@@ -28,7 +27,7 @@ require (
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/go-openapi/errors v0.22.0 // indirect
 	github.com/go-openapi/strfmt v0.23.0 // indirect
-	github.com/golang-jwt/jwt/v4 v4.5.1 // indirect
+	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
 	github.com/google/go-github/v45 v45.2.0 // indirect
 	github.com/google/go-github/v68 v68.0.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
