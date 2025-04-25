@@ -860,3 +860,120 @@ func (c *Client) DeleteApplication(id string) error {
 
 	return nil
 }
+
+type FireflyConfig struct {
+	ID                   string               `json:"id,omitempty"`
+	Name                 string               `json:"name"`
+	PolicyIds            []string             `json:"policyIds"`
+	ServiceAccountIds    []string             `json:"serviceAccountIds"`
+	SubCAProviderId      string               `json:"subCaProviderId"`
+	MinTLSVersion        string               `json:"minTlsVersion"`
+	ClientAuthentication ClientAuthentication `json:"clientAuthentication"`
+}
+
+type ClientAuthentication struct {
+	Type string `json:"type"`
+}
+
+func (c *Client) CreateFireflyConfig(ff FireflyConfig) (*FireflyConfig, error) {
+	path := c.Path(`%s/v1/distributedissuers/configurations`)
+
+	body, err := json.Marshal(ff)
+	if err != nil {
+		return nil, fmt.Errorf("Error encoding request: %s", err)
+	}
+
+	resp, err := c.Post(path, body)
+	if err != nil {
+		return nil, fmt.Errorf("Error posting request: %s", err)
+	}
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading response body: %s", err)
+	}
+	var created FireflyConfig
+	err = json.Unmarshal(respBody, &created)
+	if err != nil {
+		return nil, fmt.Errorf("Error decoding response: %s", string(respBody))
+	}
+	if created.ID == "" {
+		return nil, fmt.Errorf("Didn't create a Firefly Config; response was: %s", string(respBody))
+	}
+
+	return &created, nil
+}
+
+func (c *Client) GetFireflyConfig(id string) (*FireflyConfig, error) {
+	path := c.Path(`%s/v1/distributedissuers/configurations` + id)
+
+	resp, err := c.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting Firefly Config: %s", err)
+	}
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading response body: %s", err)
+	}
+	var got FireflyConfig
+	err = json.Unmarshal(respBody, &got)
+	if err != nil {
+		return nil, fmt.Errorf("Error decoding response: %s", string(respBody))
+	}
+	if got.ID == "" {
+		return nil, fmt.Errorf("Didn't find a Firefly Config; response was: %s", string(respBody))
+	}
+
+	return &got, nil
+}
+
+func (c *Client) UpdateFireflyConfig(ff FireflyConfig) (*FireflyConfig, error) {
+	id := ff.ID
+	if id == "" {
+		return nil, errors.New("Empty ID")
+	}
+	ff.ID = ""
+	path := c.Path(`%s/v1/distributedissuers/configurations` + id)
+
+	body, err := json.Marshal(ff)
+	if err != nil {
+		return nil, fmt.Errorf("Error encoding request: %s", err)
+	}
+
+	resp, err := c.Patch(path, body)
+	if err != nil {
+		return nil, fmt.Errorf("Error patching request: %s", err)
+	}
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading response body: %s", err)
+	}
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
+		return nil, fmt.Errorf("Failed to update Firefly Config; response was: %s", string(respBody))
+	}
+
+	var updated FireflyConfig
+	err = json.Unmarshal(respBody, &updated)
+	if err != nil {
+		return nil, fmt.Errorf("Error decoding response: %s", string(respBody))
+	}
+
+	return &updated, nil
+}
+
+func (c *Client) DeleteFireflyConfig(id string) error {
+	path := c.Path(`%s/v1/distributedissuers/configurations` + id)
+
+	resp, err := c.Delete(path, nil)
+	if err != nil {
+		return fmt.Errorf("Error with delete request: %s", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		// returning an error here anyway, no more information if we couldn't read the body
+		respBody, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("Failed to delete Firefly Config; response was: %s", string(respBody))
+	}
+
+	return nil
+}
