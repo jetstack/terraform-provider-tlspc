@@ -3,12 +3,12 @@
 page_title: "tlspc_cloudprovider_gcp Resource - tlspc"
 subcategory: ""
 description: |-
-  
+  Configure a GCP Cloud Provider integration with Workload Identity Federation
 ---
 
 # tlspc_cloudprovider_gcp (Resource)
 
-
+Configure a GCP Cloud Provider integration with Workload Identity Federation
 
 ## Example Usage
 
@@ -101,14 +101,14 @@ resource "tlspc_cloudprovider_gcp" "gcp-cloudprovider" {
 
 ### Required
 
-- `name` (String)
-- `project_number` (Number)
-- `service_account_email` (String)
-- `team` (String)
-- `workload_identity_pool_id` (String)
-- `workload_identity_pool_provider_id` (String)
+- `name` (String) The name of this integration
+- `project_number` (Number) GCP Project Number
+- `service_account_email` (String) GCP Service Account Email
+- `team` (String) The ID of the owning Team
+- `workload_identity_pool_id` (String) GCP Workload Identity Pool ID
+- `workload_identity_pool_provider_id` (String) GCP Workload Identity Pool Provider ID
 
 ### Read-Only
 
-- `id` (String) The ID of this resource.
-- `issuer_url` (String)
+- `id` (String) The ID of this resource
+- `issuer_url` (String) The issuer URL that should be provided to set up the GCP Workload Identity Pool
