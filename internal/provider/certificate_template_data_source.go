@@ -20,7 +20,7 @@ var (
 	_ datasource.DataSourceWithConfigure = &certTemplateDataSource{}
 )
 
-// NewCoffeesDataSource is a helper function to simplify the provider implementation.
+// NewCertificateTemplateDataSource is a helper function to simplify the provider implementation.
 func NewCertificateTemplateDataSource() datasource.DataSource {
 	return &certTemplateDataSource{}
 }
