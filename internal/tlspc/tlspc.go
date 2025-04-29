@@ -860,3 +860,29 @@ func (c *Client) DeleteApplication(id string) error {
 
 	return nil
 }
+
+type CertificateTemplates struct {
+	Templates []CertificateTemplate `json:"certificateIssuingTemplates"`
+}
+
+func (c *Client) GetCertTemplates() ([]CertificateTemplate, error) {
+	path := c.Path(`%s/v1/certificateissuingtemplates/`)
+
+	resp, err := c.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting certificate template: %s", err)
+	}
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading response body: %s", err)
+	}
+	var ct CertificateTemplates
+	err = json.Unmarshal(respBody, &ct)
+	if err != nil {
+		return nil, fmt.Errorf("Error decoding response: %s", string(respBody))
+	}
+
+	return ct.Templates, nil
+
+}
