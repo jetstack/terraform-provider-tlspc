@@ -3,12 +3,33 @@
 page_title: "tlspc_plugin Resource - tlspc"
 subcategory: ""
 description: |-
+  Manage the installed plugins for a TLS Protect Cloud tenant.
+  See the API Documentation https://developer.venafi.com/tlsprotectcloud/reference/post-v1-plugins for guidance.
+  The manifest attribute should be a json string which meets the specification of the manifest object.
+  For an example, see the DigiCert CA Connector https://github.com/Venafi/digicert-ca-connector/blob/main/manifest.json.
+  This would additionally need a deployment block to meet the required specification, and specify the image location:
   
+  "deployment": {
+  	"executionTarget": "vsat",
+  	"image": "org/image:v0.1.0"
+  }
 ---
 
 # tlspc_plugin (Resource)
 
+Manage the installed plugins for a TLS Protect Cloud tenant.
 
+See the [API Documentation](https://developer.venafi.com/tlsprotectcloud/reference/post-v1-plugins) for guidance.
+The manifest attribute should be a json string which meets the specification of the manifest object.
+
+For an example, see the [DigiCert CA Connector](https://github.com/Venafi/digicert-ca-connector/blob/main/manifest.json).
+This would additionally need a deployment block to meet the required specification, and specify the image location:
+```
+"deployment": {
+	"executionTarget": "vsat",
+	"image": "org/image:v0.1.0"
+}
+```
 
 ## Example Usage
 
@@ -24,8 +45,8 @@ resource "tlspc_plugin" "digicert" {
 
 ### Required
 
-- `manifest` (String)
-- `type` (String)
+- `manifest` (String) JSON string of a plugin manifest
+- `type` (String) Type of plugin, e.g. `CA` or `MACHINE`
 
 ### Read-Only
 
