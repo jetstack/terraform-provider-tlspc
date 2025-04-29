@@ -37,36 +37,45 @@ func (r *cloudProviderGCPResource) Metadata(_ context.Context, req resource.Meta
 
 func (r *cloudProviderGCPResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Configure a GCP Cloud Provider integration with Workload Identity Federation",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				MarkdownDescription: "The ID of this resource",
 			},
 			"issuer_url": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				MarkdownDescription: "The issuer URL that should be provided to set up the GCP Workload Identity Pool",
 			},
 			"name": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "The name of this integration",
 			},
 			"team": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "The ID of the owning Team",
 			},
 			"service_account_email": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "GCP Service Account Email",
 			},
 			"project_number": schema.Int64Attribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "GCP Project Number",
 			},
 			"workload_identity_pool_id": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "GCP Workload Identity Pool ID",
 			},
 			"workload_identity_pool_provider_id": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "GCP Workload Identity Pool Provider ID",
 			},
 		},
 	}
