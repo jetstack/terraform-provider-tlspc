@@ -3,12 +3,12 @@
 page_title: "tlspc_registry_account Resource - tlspc"
 subcategory: ""
 description: |-
-  
+  Manage pull credentials for the Venafi OCI private registry
 ---
 
 # tlspc_registry_account (Resource)
 
-
+Manage pull credentials for the Venafi OCI private registry
 
 ## Example Usage
 
@@ -31,13 +31,17 @@ output "dockerconfig" {
 
 ### Required
 
-- `credential_lifetime` (Number)
-- `name` (String)
-- `owner` (String)
-- `scopes` (Set of String)
+- `credential_lifetime` (Number) Credential Lifetime in days
+- `name` (String) The name of the service account
+- `owner` (String) ID of the team that owns this service account
+- `scopes` (Set of String) A list of the images that this service account is authorised to access; valid options include:
+    * oci-registry-cm
+    * oci-registry-cm-ape
+    * oci-registry-cm-vei
+    * oci-registry-cm-os
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-- `oci_account_name` (String)
-- `oci_registry_token` (String, Sensitive)
+- `oci_account_name` (String) Generated OCI account name
+- `oci_registry_token` (String, Sensitive) Generated OCI registry token
