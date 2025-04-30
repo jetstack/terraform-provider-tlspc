@@ -544,21 +544,21 @@ type caAccount struct {
 	ProductOptions []CAProductOption `json:"productOptions"`
 }
 
-func (c *Client) GetCAProductOption(kind, name, option string) (*CAProductOption, error) {
+func (c *Client) GetCAProductOption(kind, name, option string) (*CAProductOption, *CAAccount, error) {
 	path := c.Path(`%s/v1/certificateauthorities/` + kind + "/accounts")
 
 	resp, err := c.Get(path)
 	if err != nil {
-		return nil, fmt.Errorf("Error getting ca product: %s", err)
+		return nil, nil, fmt.Errorf("Error getting ca product: %s", err)
 	}
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("Error reading response body: %s", err)
+		return nil, nil, fmt.Errorf("Error reading response body: %s", err)
 	}
 	var accounts caAccounts
 	err = json.Unmarshal(body, &accounts)
 	if err != nil {
-		return nil, fmt.Errorf("Error decoding response: %s", string(body))
+		return nil, nil, fmt.Errorf("Error decoding response: %s", string(body))
 	}
 	for _, acc := range accounts.Accounts {
 		acct := acc.Account
@@ -567,12 +567,12 @@ func (c *Client) GetCAProductOption(kind, name, option string) (*CAProductOption
 		}
 		for _, opt := range acc.ProductOptions {
 			if opt.Name == option {
-				return &opt, nil
+				return &opt, &acct, nil
 			}
 		}
 	}
 
-	return nil, fmt.Errorf("Specified CA product option not found.")
+	return nil, nil, fmt.Errorf("Specified CA product option not found.")
 }
 
 func (c *Client) GetCAProductOptionByID(kind, option_id string) (*CAProductOption, error) {
