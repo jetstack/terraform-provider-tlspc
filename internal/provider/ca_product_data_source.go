@@ -64,6 +64,10 @@ func (d *caProductDataSource) Schema(_ context.Context, _ datasource.SchemaReque
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
+			"account_id": schema.StringAttribute{
+				Computed:            true,
+				MarkdownDescription: "The ID of the CA Account",
+			},
 			"type": schema.StringAttribute{
 				Required: true,
 				MarkdownDescription: `Type of Certificate Authority, valid values include:
@@ -92,6 +96,7 @@ func (d *caProductDataSource) Schema(_ context.Context, _ datasource.SchemaReque
 
 type caProductDataSourceModel struct {
 	ID            types.String `tfsdk:"id"`
+	AccountID     types.String `tfsdk:"account_id"`
 	Type          types.String `tfsdk:"type"`
 	CAName        types.String `tfsdk:"ca_name"`
 	ProductOption types.String `tfsdk:"product_option"`
@@ -106,7 +111,7 @@ func (d *caProductDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	caProduct, err := d.client.GetCAProductOption(model.Type.ValueString(), model.CAName.ValueString(), model.ProductOption.ValueString())
+	caProduct, caAcct, err := d.client.GetCAProductOption(model.Type.ValueString(), model.CAName.ValueString(), model.ProductOption.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error retrieving CA Product",
@@ -115,6 +120,7 @@ func (d *caProductDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 	model.ID = types.StringValue(caProduct.ID)
+	model.AccountID = types.StringValue(caAcct.ID)
 	diags = resp.State.Set(ctx, &model)
 	resp.Diagnostics.Append(diags...)
 }
