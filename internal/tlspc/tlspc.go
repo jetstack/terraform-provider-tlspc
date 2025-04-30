@@ -977,3 +977,117 @@ func (c *Client) DeleteFireflyConfig(id string) error {
 
 	return nil
 }
+
+type FireflySubCAProvider struct {
+	ID                string `json:"id,omitempty"`
+	Name              string `json:"name"`
+	CAType            string `json:"caType"`
+	CAAccountID       string `json:"caAccountId"`
+	CAProductOptionID string `json:"caProductOptionId"`
+	CommonName        string `json:"commonName"`
+	KeyAlgorithm      string `json:"keyAlgorithm"`
+	ValidityPeriod    string `json:"validityPeriod"`
+}
+
+func (c *Client) CreateFireflySubCAProvider(ff FireflySubCAProvider) (*FireflySubCAProvider, error) {
+	path := c.Path(`%s/v1/distributedissuers/subcaproviders`)
+
+	body, err := json.Marshal(ff)
+	if err != nil {
+		return nil, fmt.Errorf("Error encoding request: %s", err)
+	}
+
+	resp, err := c.Post(path, body)
+	if err != nil {
+		return nil, fmt.Errorf("Error posting request: %s", err)
+	}
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading response body: %s", err)
+	}
+	var created FireflySubCAProvider
+	err = json.Unmarshal(respBody, &created)
+	if err != nil {
+		return nil, fmt.Errorf("Error decoding response: %s", string(respBody))
+	}
+	if created.ID == "" {
+		return nil, fmt.Errorf("Didn't create a Firefly SubCAProvider; response was: %s", string(respBody))
+	}
+
+	return &created, nil
+}
+
+func (c *Client) GetFireflySubCAProvider(id string) (*FireflySubCAProvider, error) {
+	path := c.Path(`%s/v1/distributedissuers/subcaproviders` + id)
+
+	resp, err := c.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting Firefly SubCAProvider: %s", err)
+	}
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading response body: %s", err)
+	}
+	var got FireflySubCAProvider
+	err = json.Unmarshal(respBody, &got)
+	if err != nil {
+		return nil, fmt.Errorf("Error decoding response: %s", string(respBody))
+	}
+	if got.ID == "" {
+		return nil, fmt.Errorf("Didn't find a Firefly SubCAProvider; response was: %s", string(respBody))
+	}
+
+	return &got, nil
+}
+
+func (c *Client) UpdateFireflySubCAProvider(ff FireflySubCAProvider) (*FireflySubCAProvider, error) {
+	id := ff.ID
+	if id == "" {
+		return nil, errors.New("Empty ID")
+	}
+	ff.ID = ""
+	path := c.Path(`%s/v1/distributedissuers/subcaproviders` + id)
+
+	body, err := json.Marshal(ff)
+	if err != nil {
+		return nil, fmt.Errorf("Error encoding request: %s", err)
+	}
+
+	resp, err := c.Patch(path, body)
+	if err != nil {
+		return nil, fmt.Errorf("Error patching request: %s", err)
+	}
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading response body: %s", err)
+	}
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
+		return nil, fmt.Errorf("Failed to update Firefly SubCAProvider; response was: %s", string(respBody))
+	}
+
+	var updated FireflySubCAProvider
+	err = json.Unmarshal(respBody, &updated)
+	if err != nil {
+		return nil, fmt.Errorf("Error decoding response: %s", string(respBody))
+	}
+
+	return &updated, nil
+}
+
+func (c *Client) DeleteFireflySubCAProvider(id string) error {
+	path := c.Path(`%s/v1/distributedissuers/subcaproviders` + id)
+
+	resp, err := c.Delete(path, nil)
+	if err != nil {
+		return fmt.Errorf("Error with delete request: %s", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		// returning an error here anyway, no more information if we couldn't read the body
+		respBody, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("Failed to delete Firefly SubCAProvider; response was: %s", string(respBody))
+	}
+
+	return nil
+}
