@@ -1120,3 +1120,146 @@ func (c *Client) DeleteFireflySubCAProvider(id string) error {
 
 	return nil
 }
+
+type FireflyPolicy struct {
+	ID                string               `json:"id,omitempty"`
+	Name              string               `json:"name"`
+	ExtendedKeyUsages []string             `json:"extendedKeyUsages"`
+	KeyAlgorithm      KeyAlgorithm         `json:"keyAlgorithm"`
+	KeyUsages         []string             `json:"keyUsages"`
+	SANs              SANs                 `json:"sans"`
+	Subject           FireflyPolicySubject `json:"subject"`
+	ValidityPeriod    string               `json:"validityPeriod"`
+}
+
+type KeyAlgorithm struct {
+	AllowedValues []string `json:"allowedValues"`
+	DefaultValue  string   `json:"defaultValue"`
+}
+
+type SANs struct {
+	DNSNames    PolicyDetails `json:"dnsNames"`
+	IPAddresses PolicyDetails `json:"ipAddresses"`
+	RFC822Names PolicyDetails `json:"rfc822Names"`
+	URIs        PolicyDetails `json:"uniformResourceIdentifiers"`
+}
+
+type PolicyDetails struct {
+	AllowedValues  []string `json:"allowedValues"`
+	DefaultValues  []string `json:"defaultValues"`
+	MaxOccurrences int32    `json:"maxOccurrences"`
+	MinOccurrences int32    `json:"minOccurrences"`
+	Type           string   `json:"type"`
+}
+
+type FireflyPolicySubject struct {
+	CommonName         PolicyDetails `json:"commonName"`
+	Country            PolicyDetails `json:"country"`
+	Locality           PolicyDetails `json:"locality"`
+	Organization       PolicyDetails `json:"organization"`
+	OrganizationalUnit PolicyDetails `json:"organizationalUnit"`
+	StateOrProvince    PolicyDetails `json:"stateOrProvince"`
+}
+
+func (c *Client) CreateFireflyPolicy(ff FireflyPolicy) (*FireflyPolicy, error) {
+	path := c.Path(`%s/v1/distributedissuers/policies`)
+
+	body, err := json.Marshal(ff)
+	if err != nil {
+		return nil, fmt.Errorf("Error encoding request: %s", err)
+	}
+
+	resp, err := c.Post(path, body)
+	if err != nil {
+		return nil, fmt.Errorf("Error posting request: %s", err)
+	}
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading response body: %s", err)
+	}
+	var created FireflyPolicy
+	err = json.Unmarshal(respBody, &created)
+	if err != nil {
+		return nil, fmt.Errorf("Error decoding response: %s", string(respBody))
+	}
+	if created.ID == "" {
+		return nil, fmt.Errorf("Didn't create a Firefly Policy; response was: %s", string(respBody))
+	}
+
+	return &created, nil
+}
+
+func (c *Client) GetFireflyPolicy(id string) (*FireflyPolicy, error) {
+	path := c.Path(`%s/v1/distributedissuers/policies/` + id)
+
+	resp, err := c.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting Firefly Policy: %s", err)
+	}
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading response body: %s", err)
+	}
+	var got FireflyPolicy
+	err = json.Unmarshal(respBody, &got)
+	if err != nil {
+		return nil, fmt.Errorf("Error decoding response: %s", string(respBody))
+	}
+	if got.ID == "" {
+		return nil, fmt.Errorf("Didn't find a Firefly Policy; response was: %s", string(respBody))
+	}
+
+	return &got, nil
+}
+
+func (c *Client) UpdateFireflyPolicy(ff FireflyPolicy) (*FireflyPolicy, error) {
+	id := ff.ID
+	if id == "" {
+		return nil, errors.New("Empty ID")
+	}
+	ff.ID = ""
+	path := c.Path(`%s/v1/distributedissuers/policies/` + id)
+
+	body, err := json.Marshal(ff)
+	if err != nil {
+		return nil, fmt.Errorf("Error encoding request: %s", err)
+	}
+
+	resp, err := c.Patch(path, body)
+	if err != nil {
+		return nil, fmt.Errorf("Error patching request: %s", err)
+	}
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading response body: %s", err)
+	}
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
+		return nil, fmt.Errorf("Failed to update Firefly Policy; response was: %s", string(respBody))
+	}
+
+	var updated FireflyPolicy
+	err = json.Unmarshal(respBody, &updated)
+	if err != nil {
+		return nil, fmt.Errorf("Error decoding response: %s", string(respBody))
+	}
+
+	return &updated, nil
+}
+
+func (c *Client) DeleteFireflyPolicy(id string) error {
+	path := c.Path(`%s/v1/distributedissuers/policies/` + id)
+
+	resp, err := c.Delete(path, nil)
+	if err != nil {
+		return fmt.Errorf("Error with delete request: %s", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		// returning an error here anyway, no more information if we couldn't read the body
+		respBody, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("Failed to delete Firefly Policy; response was: %s", string(respBody))
+	}
+
+	return nil
+}
