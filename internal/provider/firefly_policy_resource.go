@@ -386,16 +386,14 @@ func (r *fireflyPolicyResource) Delete(ctx context.Context, req resource.DeleteR
 		return
 	}
 
-	/*
-		err := r.client.DeleteFireflyConfig(state.ID.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error Deleting FireflyConfig",
-				"Could not delete FireflyConfig ID "+state.ID.ValueString()+": "+err.Error(),
-			)
-			return
-		}
-	*/
+	err := r.client.DeleteFireflyPolicy(state.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Deleting Firefly Policy ",
+			"Could not delete Firefly Policy ID "+state.ID.ValueString()+": "+err.Error(),
+		)
+		return
+	}
 }
 
 func (r *fireflyPolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
