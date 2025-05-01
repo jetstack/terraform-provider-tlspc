@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 var (
@@ -54,16 +53,12 @@ func (r *fireflyConfigResource) Schema(_ context.Context, _ resource.SchemaReque
 				Required: true,
 			},
 			"service_accounts": schema.SetAttribute{
-				Required: true,
-				ElementType: basetypes.MapType{
-					ElemType: types.StringType,
-				},
+				Required:    true,
+				ElementType: types.StringType,
 			},
 			"policies": schema.SetAttribute{
-				Required: true,
-				ElementType: basetypes.MapType{
-					ElemType: types.StringType,
-				},
+				Required:    true,
+				ElementType: types.StringType,
 			},
 		},
 	}
@@ -110,7 +105,7 @@ func (r *fireflyConfigResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	policies := []string{}
-	for _, v := range plan.ServiceAccounts {
+	for _, v := range plan.Policies {
 		policies = append(policies, v.ValueString())
 	}
 
@@ -120,9 +115,7 @@ func (r *fireflyConfigResource) Create(ctx context.Context, req resource.CreateR
 		PolicyIds:         policies,
 		ServiceAccountIds: sa,
 		MinTLSVersion:     "TLS13",
-		ClientAuthentication: tlspc.ClientAuthentication{
-			Type: "None",
-		},
+		//ClientAuthentication: tlspc.ClientAuthentication{},
 	}
 	created, err := r.client.CreateFireflyConfig(ff)
 	if err != nil {
@@ -193,7 +186,7 @@ func (r *fireflyConfigResource) Update(ctx context.Context, req resource.UpdateR
 	}
 
 	policies := []string{}
-	for _, v := range plan.ServiceAccounts {
+	for _, v := range plan.Policies {
 		policies = append(policies, v.ValueString())
 	}
 
@@ -204,9 +197,11 @@ func (r *fireflyConfigResource) Update(ctx context.Context, req resource.UpdateR
 		PolicyIds:         policies,
 		ServiceAccountIds: sa,
 		MinTLSVersion:     "TLS13",
-		ClientAuthentication: tlspc.ClientAuthentication{
-			Type: "None",
-		},
+		/*
+			ClientAuthentication: tlspc.ClientAuthentication{
+				Type: "None",
+			},
+		*/
 	}
 
 	updated, err := r.client.UpdateFireflyConfig(ff)
