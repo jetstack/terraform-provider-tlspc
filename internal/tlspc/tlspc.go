@@ -901,7 +901,7 @@ func (c *Client) CreateFireflyConfig(ff FireflyConfig) (*FireflyConfig, error) {
 		return nil, fmt.Errorf("Error decoding response: %s", string(respBody))
 	}
 	if created.ID == "" {
-		return nil, fmt.Errorf("Didn't create a Firefly Config; request was %s, response was: %s", string(body), string(respBody))
+		return nil, fmt.Errorf("Didn't create a Firefly Config; response was: %s", string(respBody))
 	}
 
 	return &created, nil
