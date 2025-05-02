@@ -161,8 +161,8 @@ func (r *fireflyConfigResource) Read(ctx context.Context, req resource.ReadReque
 	state.ServiceAccounts = sa
 
 	policies := []types.String{}
-	for _, v := range ff.PolicyIds {
-		policies = append(policies, types.StringValue(v))
+	for _, v := range ff.Policies {
+		policies = append(policies, types.StringValue(v.ID))
 	}
 	state.Policies = policies
 
