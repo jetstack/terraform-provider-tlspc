@@ -888,12 +888,13 @@ func (c *Client) GetCertTemplates() ([]CertificateTemplate, error) {
 }
 
 type FireflyConfig struct {
-	ID                string   `json:"id,omitempty"`
-	Name              string   `json:"name"`
-	PolicyIds         []string `json:"policyIds"`
-	ServiceAccountIds []string `json:"serviceAccountIds"`
-	SubCAProviderId   string   `json:"subCaProviderId"`
-	MinTLSVersion     string   `json:"minTlsVersion"`
+	ID                string          `json:"id,omitempty"`
+	Name              string          `json:"name"`
+	PolicyIds         []string        `json:"policyIds"`
+	Policies          []FireflyPolicy `json:"policies,omitempty"`
+	ServiceAccountIds []string        `json:"serviceAccountIds"`
+	SubCAProviderId   string          `json:"subCaProviderId"`
+	MinTLSVersion     string          `json:"minTlsVersion"`
 	//ClientAuthentication ClientAuthentication `json:"clientAuthentication,omitempty"`
 	CloudProviders CloudProviders `json:"cloudProviders"`
 }
