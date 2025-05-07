@@ -39,11 +39,7 @@ func (r *certificateTemplateResource) Schema(_ context.Context, _ resource.Schem
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `Manage Certificate Issuing Template
 
-> [!Note]
-> Currently only a limited subset of attributes are supported.
-> All Common Name/SAN/CSR validation fields are set to ` + "`.*` (allow all)." + `
-> Permitted Key Algorithms are set to RSA 2048/3072/4096.
-`,
+-> Currently only a limited subset of attributes are supported. All Common Name/SAN/CSR validation fields are set to ` + "`.*` (allow all)." + ` Permitted Key Algorithms are set to RSA 2048/3072/4096.`,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,

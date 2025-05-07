@@ -4,17 +4,14 @@ page_title: "tlspc_certificate_template Resource - tlspc"
 subcategory: ""
 description: |-
   Manage Certificate Issuing Template
-  [!Note]Currently only a limited subset of attributes are supported.All Common Name/SAN/CSR validation fields are set to .* (allow all).Permitted Key Algorithms are set to RSA 2048/3072/4096.
+  -> Currently only a limited subset of attributes are supported. All Common Name/SAN/CSR validation fields are set to .* (allow all). Permitted Key Algorithms are set to RSA 2048/3072/4096.
 ---
 
 # tlspc_certificate_template (Resource)
 
 Manage Certificate Issuing Template
 
-> [!Note]
-> Currently only a limited subset of attributes are supported.
-> All Common Name/SAN/CSR validation fields are set to `.*` (allow all).
-> Permitted Key Algorithms are set to RSA 2048/3072/4096.
+-> Currently only a limited subset of attributes are supported. All Common Name/SAN/CSR validation fields are set to `.*` (allow all). Permitted Key Algorithms are set to RSA 2048/3072/4096.
 
 ## Example Usage
 
