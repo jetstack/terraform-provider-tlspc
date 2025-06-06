@@ -1011,8 +1011,8 @@ func (c *Client) DeleteFireflyConfig(id string) error {
 type FireflySubCAProvider struct {
 	ID                string `json:"id,omitempty"`
 	Name              string `json:"name"`
-	CAType            string `json:"caType"`
-	CAAccountID       string `json:"caAccountId"`
+	CAType            string `json:"caType,omitempty"`
+	CAAccountID       string `json:"caAccountId,omitempty"`
 	CAProductOptionID string `json:"caProductOptionId"`
 	CommonName        string `json:"commonName"`
 	KeyAlgorithm      string `json:"keyAlgorithm"`
@@ -1078,6 +1078,8 @@ func (c *Client) UpdateFireflySubCAProvider(ff FireflySubCAProvider) (*FireflySu
 		return nil, errors.New("Empty ID")
 	}
 	ff.ID = ""
+	ff.CAType = ""
+	ff.CAAccountID = ""
 	path := c.Path(`%s/v1/distributedissuers/subcaproviders/` + id)
 
 	body, err := json.Marshal(ff)
