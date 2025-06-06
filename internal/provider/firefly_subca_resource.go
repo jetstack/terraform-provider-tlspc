@@ -223,11 +223,11 @@ func (r *fireflySubCAResource) Delete(ctx context.Context, req resource.DeleteRe
 		return
 	}
 
-	err := r.client.DeleteFireflyConfig(state.ID.ValueString())
+	err := r.client.DeleteFireflySubCAProvider(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Deleting FireflyConfig",
-			"Could not delete FireflyConfig ID "+state.ID.ValueString()+": "+err.Error(),
+			"Error Deleting Firefly SubCA Provider",
+			"Could not delete Firefly SubCA Provider ID: "+state.ID.ValueString()+": "+err.Error(),
 		)
 		return
 	}
