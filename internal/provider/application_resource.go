@@ -271,7 +271,7 @@ func (r *applicationResource) Update(ctx context.Context, req resource.UpdateReq
 }
 
 func (r *applicationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state applicationResourceModel
+	var plan, state applicationResourceModel
 
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -285,6 +285,69 @@ func (r *applicationResource) Delete(ctx context.Context, req resource.DeleteReq
 			"Error Deleting Application",
 			"Could not delete Application ID "+state.ID.ValueString()+": "+err.Error(),
 		)
+
+		owners := []tlspc.OwnerAndType{}
+		for _, v := range state.Owners {
+			m := v.Elements()
+			// TODO: Work out how you're supposed to get an unquoted string out
+			kind := strings.Trim(m["type"].String(), `"`)
+			ownerId := strings.Trim(m["owner"].String(), `"`)
+			if kind != "USER" && kind != "TEAM" {
+				resp.Diagnostics.AddError(
+					"Error creating application",
+					"Could not create application, unsupported owner type: "+kind,
+				)
+				return
+			}
+			if ownerId == "" {
+				resp.Diagnostics.AddError(
+					"Error creating application",
+					"Could not create application, undefined owner",
+				)
+				return
+			}
+			owner := tlspc.OwnerAndType{
+				ID:   ownerId,
+				Type: kind,
+			}
+			owners = append(owners, owner)
+		}
+
+		aliases := map[string]string{}
+
+		application := tlspc.Application{
+			ID:                   state.ID.ValueString(),
+			Name:                 state.Name.ValueString(),
+			Owners:               owners,
+			CertificateTemplates: aliases,
+		}
+
+		updated, err := r.client.UpdateApplication(application)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error updating application",
+				"Could not update application, unexpected error: "+err.Error(),
+			)
+			return
+		}
+		plan.ID = types.StringValue(updated.ID)
+		diags = resp.State.Set(ctx, plan)
+		resp.Diagnostics.Append(diags...)
+
+		diags := req.State.Get(ctx, &state)
+		resp.Diagnostics.Append(diags...)
+		// if resp.Diagnostics.HasError() {
+		// 	return
+		// }
+
+		errr := r.client.DeleteApplication(state.ID.ValueString())
+		if errr != nil {
+			resp.Diagnostics.AddError(
+				"Error Deleting Application",
+				"Could not delete Application ID "+state.ID.ValueString()+": "+err.Error(),
+			)
+		}
+
 		return
 	}
 }
