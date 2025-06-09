@@ -60,7 +60,8 @@ func (r *applicationResource) Schema(_ context.Context, _ resource.SchemaRequest
 				MarkdownDescription: "A map of owner ids, see example for format",
 			},
 			"ca_template_aliases": schema.MapAttribute{
-				Required:            true,
+				// Only required for create operations. In order to update with blank map, this must be optional.
+				Optional:            true,
 				ElementType:         types.StringType,
 				MarkdownDescription: "CA Template alias-to-id mapping for templates available to this application, see example for format",
 			},
@@ -281,11 +282,14 @@ func (r *applicationResource) Delete(ctx context.Context, req resource.DeleteReq
 
 	err := r.client.DeleteApplication(state.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Deleting Application",
-			"Could not delete Application ID "+state.ID.ValueString()+": "+err.Error(),
-		)
+		// Just take the error out for now, at least until we try below...
+		// resp.Diagnostics.AddError(
+		// 	"Error Deleting Application",
+		// 	"Could not delete Application ID "+state.ID.ValueString()+": "+err.Error(),
+		// )
 
+		// TODO: determine the error code here to kick in the next bit of logic.
+		// Just assume whatever the error, lets update the app anyway to remove CA Templates.
 		owners := []tlspc.OwnerAndType{}
 		for _, v := range state.Owners {
 			m := v.Elements()
@@ -313,7 +317,12 @@ func (r *applicationResource) Delete(ctx context.Context, req resource.DeleteReq
 			owners = append(owners, owner)
 		}
 
+		// Set this as: {"":""} to use to overwrite the state
 		aliases := map[string]string{}
+
+		// for k, v := range state.CATemplateAliases.Elements() {
+		// 	aliases[k] = strings.Trim(v.String(), `"`)
+		// }
 
 		application := tlspc.Application{
 			ID:                   state.ID.ValueString(),
@@ -336,9 +345,9 @@ func (r *applicationResource) Delete(ctx context.Context, req resource.DeleteReq
 
 		diags := req.State.Get(ctx, &state)
 		resp.Diagnostics.Append(diags...)
-		// if resp.Diagnostics.HasError() {
-		// 	return
-		// }
+		if resp.Diagnostics.HasError() {
+			return
+		}
 
 		errr := r.client.DeleteApplication(state.ID.ValueString())
 		if errr != nil {
