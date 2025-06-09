@@ -339,9 +339,6 @@ func (r *applicationResource) Delete(ctx context.Context, req resource.DeleteReq
 			)
 			return
 		}
-		plan.ID = types.StringValue(updated.ID)
-		diags = resp.State.Set(ctx, plan)
-		resp.Diagnostics.Append(diags...)
 
 		diags := req.State.Get(ctx, &state)
 		resp.Diagnostics.Append(diags...)
@@ -353,10 +350,13 @@ func (r *applicationResource) Delete(ctx context.Context, req resource.DeleteReq
 		if errr != nil {
 			resp.Diagnostics.AddError(
 				"Error Deleting Application",
-				"Could not delete Application ID "+state.ID.ValueString()+": "+err.Error(),
+				"Could not delete Application ID "+state.ID.ValueString()+": "+errr.Error(),
 			)
 		}
 
+		plan.ID = types.StringValue(updated.ID)
+		// diags = resp.State.Set(ctx, plan)
+		resp.Diagnostics.Append(diags...)
 		return
 	}
 }
