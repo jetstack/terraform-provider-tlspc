@@ -25,9 +25,12 @@ resource "tlspc_application" "app" {
 
 ### Required
 
-- `ca_template_aliases` (Map of String) CA Template alias-to-id mapping for templates available to this application, see example for format
 - `name` (String) The name of the application
 - `owners` (Set of Map of String) A map of owner ids, see example for format
+
+### Optional
+
+- `ca_template_aliases` (Map of String) CA Template alias-to-id mapping for templates available to this application, see example for format
 
 ### Read-Only
 

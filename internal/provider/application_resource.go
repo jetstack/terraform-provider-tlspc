@@ -60,7 +60,7 @@ func (r *applicationResource) Schema(_ context.Context, _ resource.SchemaRequest
 				MarkdownDescription: "A map of owner ids, see example for format",
 			},
 			"ca_template_aliases": schema.MapAttribute{
-				// Only required for create operations. In order to update with blank map, this must be optional.
+				// Not an API required field. In order to update with blank map for application deletion, this must be optional.
 				Optional:            true,
 				ElementType:         types.StringType,
 				MarkdownDescription: "CA Template alias-to-id mapping for templates available to this application, see example for format",
