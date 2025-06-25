@@ -1,0 +1,92 @@
+query GCPProviders {
+    cloudProviders(filter: {type: GCP}) {
+        totalCount
+        nodes{
+            id
+            name
+            type
+            team {
+                id
+            }
+            authorizedTeams {
+                id
+            }
+            configuration {
+                ... on CloudProviderGCPConfiguration{
+                    serviceAccountEmail
+                    projectNumber
+                    workloadIdentityPoolId
+                    workloadIdentityPoolProviderId
+                    issuerUrl
+                }
+            }
+        }
+    }
+}
+
+mutation NewGCPProvider($Name: String!, $Team: UUID!, $Email: String!, $Project: String!, $WIPId: String!, $WIPPId: String!) {
+    createCloudProvider(
+        input: {
+            name: $Name,
+            type: GCP,
+            teamId: $Team,
+            gcpConfiguration: {
+                authorizationMethod: WORKLOAD_IDENTITY_FEDERATION,
+                serviceAccountEmail: $Email,
+                projectNumber: $Project,
+                workloadIdentityPoolId: $WIPId,
+                workloadIdentityPoolProviderId: $WIPPId,
+            }
+        }
+    ) {
+        id
+        name
+        team {
+            id
+        }
+        configuration{
+            ... on CloudProviderGCPConfiguration{
+                serviceAccountEmail
+                projectNumber
+                workloadIdentityPoolId
+                workloadIdentityPoolProviderId
+                issuerUrl
+            }
+        }
+    }
+}
+
+mutation UpdateGCPProvider($Id: UUID!, $Name: String!, $Team: UUID!, $Project: String!, $WIPId: String!, $WIPPId: String!) {
+    updateCloudProvider(
+        input: {
+            id: $Id,
+            name: $Name,
+            type: GCP,
+            teamId: $Team,
+            gcpConfiguration: {
+                projectNumber: $Project,
+                workloadIdentityPoolId: $WIPId,
+                workloadIdentityPoolProviderId: $WIPPId,
+            }
+        }
+    ) {
+        id
+        name
+        team {
+            id
+        }
+        configuration{
+            ... on CloudProviderGCPConfiguration{
+                serviceAccountEmail
+                projectNumber
+                workloadIdentityPoolId
+                workloadIdentityPoolProviderId
+                issuerUrl
+            }
+        }
+    }
+}
+
+mutation DeleteGCPProvider($Id: UUID!) {
+    deleteCloudProvider(cloudProviderId: [$Id])
+}

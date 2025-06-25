@@ -1,0 +1,13 @@
+# Copyright (c) Venafi, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+# Default genqlient config; for full documentation see:
+# https://github.com/Khan/genqlient/blob/main/docs/genqlient.yaml
+schema: schema.graphql
+package: graphql
+operations:
+- genqlient.graphql
+generated: graphql.go
+bindings:
+  UUID:
+    type: github.com/google/uuid.UUID
