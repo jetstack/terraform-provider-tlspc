@@ -35,12 +35,15 @@ func (r *cloudProviderGCPValidateResource) Metadata(_ context.Context, req resou
 
 func (r *cloudProviderGCPValidateResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Activates a GCP Cloud Provider configuration for usage.",
 		Attributes: map[string]schema.Attribute{
 			"cloudprovider_id": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "Reference to the tlspc_cloudprovider_gcp resource to validate.",
 			},
 			"validate": schema.BoolAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "Set to true to validate the GCP Cloud Provider connection.",
 			},
 		},
 	}
