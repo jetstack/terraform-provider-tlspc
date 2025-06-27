@@ -3,12 +3,12 @@
 page_title: "tlspc_cloudprovider_gcp_validate Resource - tlspc"
 subcategory: ""
 description: |-
-  
+  Activates a GCP Cloud Provider configuration for usage.
 ---
 
 # tlspc_cloudprovider_gcp_validate (Resource)
 
-
+Activates a GCP Cloud Provider configuration for usage.
 
 ## Example Usage
 
@@ -50,5 +50,5 @@ resource "tlspc_cloudprovider_gcp_validate" "gcp-cloudprovider-validation" {
 
 ### Required
 
-- `cloudprovider_id` (String)
-- `validate` (Boolean)
+- `cloudprovider_id` (String) Reference to the tlspc_cloudprovider_gcp resource to validate.
+- `validate` (Boolean) Set to true to validate the GCP Cloud Provider connection.
