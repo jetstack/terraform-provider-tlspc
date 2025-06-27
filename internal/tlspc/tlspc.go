@@ -102,11 +102,18 @@ func (c *Client) GetUser(email string) (*User, error) {
 }
 
 type Team struct {
-	ID      string   `json:"id,omitempty"`
-	Name    string   `json:"name"`
-	Role    string   `json:"role"`
-	Owners  []string `json:"owners"`
-	Members []string `json:"members"`
+	ID                string             `json:"id,omitempty"`
+	Name              string             `json:"name"`
+	Role              string             `json:"role"`
+	Owners            []string           `json:"owners"`
+	Members           []string           `json:"members"`
+	UserMatchingRules []UserMatchingRule `json:"userMatchingRules,omitempty"`
+}
+
+type UserMatchingRule struct {
+	ClaimName string `json:"claimName"`
+	Operator  string `json:"operator"`
+	Value     string `json:"value"`
 }
 
 func (c *Client) CreateTeam(team Team) (*Team, error) {
@@ -163,8 +170,9 @@ func (c *Client) GetTeam(id string) (*Team, error) {
 }
 
 type updateTeam struct {
-	Name string `json:"name"`
-	Role string `json:"role"`
+	Name              string             `json:"name"`
+	Role              string             `json:"role"`
+	UserMatchingRules []UserMatchingRule `json:"userMatchingRules,omitempty"`
 }
 
 func (c *Client) UpdateTeam(team Team) (*Team, error) {
@@ -176,8 +184,9 @@ func (c *Client) UpdateTeam(team Team) (*Team, error) {
 	path := c.Path(`%s/v1/teams/` + id)
 
 	update := updateTeam{
-		Name: team.Name,
-		Role: team.Role,
+		Name:              team.Name,
+		Role:              team.Role,
+		UserMatchingRules: team.UserMatchingRules,
 	}
 	body, err := json.Marshal(update)
 	if err != nil {
