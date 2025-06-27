@@ -103,6 +103,7 @@ func (p *tlspcProvider) Resources(ctx context.Context) []func() resource.Resourc
 		NewFireflySubCAResource,
 		NewFireflyPolicyResource,
 		NewCloudProviderGCPResource,
+		NewCloudProviderGCPValidateResource,
 	}
 }
 

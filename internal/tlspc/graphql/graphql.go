@@ -11,6 +11,21 @@ import (
 	"github.com/google/uuid"
 )
 
+// Indicates the status of a cloud provider
+type CloudProviderStatus string
+
+const (
+	// The cloud provider is successfully validated
+	CloudProviderStatusValidated CloudProviderStatus = "VALIDATED"
+	// The cloud provider is not validated or the validation fails for some reason
+	CloudProviderStatusNotValidated CloudProviderStatus = "NOT_VALIDATED"
+)
+
+var AllCloudProviderStatus = []CloudProviderStatus{
+	CloudProviderStatusValidated,
+	CloudProviderStatusNotValidated,
+}
+
 // Indicates the type of a Cloud Provider
 type CloudProviderType string
 
@@ -372,6 +387,219 @@ type GCPProvidersResponse struct {
 // GetCloudProviders returns GCPProvidersResponse.CloudProviders, and is useful for accessing the field via an interface.
 func (v *GCPProvidersResponse) GetCloudProviders() GCPProvidersCloudProvidersCloudProviderConnection {
 	return v.CloudProviders
+}
+
+// GetGCPProviderDetailsCloudProviderDetails includes the requested fields of the GraphQL interface CloudProviderDetails.
+//
+// GetGCPProviderDetailsCloudProviderDetails is implemented by the following types:
+// GetGCPProviderDetailsCloudProviderDetailsAWSProviderDetails
+// GetGCPProviderDetailsCloudProviderDetailsAzureProviderDetails
+// GetGCPProviderDetailsCloudProviderDetailsGCPProviderDetails
+type GetGCPProviderDetailsCloudProviderDetails interface {
+	implementsGraphQLInterfaceGetGCPProviderDetailsCloudProviderDetails()
+	// GetTypename returns the receiver's concrete GraphQL type-name (see interface doc for possible values).
+	GetTypename() string
+}
+
+func (v *GetGCPProviderDetailsCloudProviderDetailsAWSProviderDetails) implementsGraphQLInterfaceGetGCPProviderDetailsCloudProviderDetails() {
+}
+func (v *GetGCPProviderDetailsCloudProviderDetailsAzureProviderDetails) implementsGraphQLInterfaceGetGCPProviderDetailsCloudProviderDetails() {
+}
+func (v *GetGCPProviderDetailsCloudProviderDetailsGCPProviderDetails) implementsGraphQLInterfaceGetGCPProviderDetailsCloudProviderDetails() {
+}
+
+func __unmarshalGetGCPProviderDetailsCloudProviderDetails(b []byte, v *GetGCPProviderDetailsCloudProviderDetails) error {
+	if string(b) == "null" {
+		return nil
+	}
+
+	var tn struct {
+		TypeName string `json:"__typename"`
+	}
+	err := json.Unmarshal(b, &tn)
+	if err != nil {
+		return err
+	}
+
+	switch tn.TypeName {
+	case "AWSProviderDetails":
+		*v = new(GetGCPProviderDetailsCloudProviderDetailsAWSProviderDetails)
+		return json.Unmarshal(b, *v)
+	case "AzureProviderDetails":
+		*v = new(GetGCPProviderDetailsCloudProviderDetailsAzureProviderDetails)
+		return json.Unmarshal(b, *v)
+	case "GCPProviderDetails":
+		*v = new(GetGCPProviderDetailsCloudProviderDetailsGCPProviderDetails)
+		return json.Unmarshal(b, *v)
+	case "":
+		return fmt.Errorf(
+			"response was missing CloudProviderDetails.__typename")
+	default:
+		return fmt.Errorf(
+			`unexpected concrete type for GetGCPProviderDetailsCloudProviderDetails: "%v"`, tn.TypeName)
+	}
+}
+
+func __marshalGetGCPProviderDetailsCloudProviderDetails(v *GetGCPProviderDetailsCloudProviderDetails) ([]byte, error) {
+
+	var typename string
+	switch v := (*v).(type) {
+	case *GetGCPProviderDetailsCloudProviderDetailsAWSProviderDetails:
+		typename = "AWSProviderDetails"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*GetGCPProviderDetailsCloudProviderDetailsAWSProviderDetails
+		}{typename, v}
+		return json.Marshal(result)
+	case *GetGCPProviderDetailsCloudProviderDetailsAzureProviderDetails:
+		typename = "AzureProviderDetails"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*GetGCPProviderDetailsCloudProviderDetailsAzureProviderDetails
+		}{typename, v}
+		return json.Marshal(result)
+	case *GetGCPProviderDetailsCloudProviderDetailsGCPProviderDetails:
+		typename = "GCPProviderDetails"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*GetGCPProviderDetailsCloudProviderDetailsGCPProviderDetails
+		}{typename, v}
+		return json.Marshal(result)
+	case nil:
+		return []byte("null"), nil
+	default:
+		return nil, fmt.Errorf(
+			`unexpected concrete type for GetGCPProviderDetailsCloudProviderDetails: "%T"`, v)
+	}
+}
+
+// GetGCPProviderDetailsCloudProviderDetailsAWSProviderDetails includes the requested fields of the GraphQL type AWSProviderDetails.
+type GetGCPProviderDetailsCloudProviderDetailsAWSProviderDetails struct {
+	Typename string `json:"__typename"`
+}
+
+// GetTypename returns GetGCPProviderDetailsCloudProviderDetailsAWSProviderDetails.Typename, and is useful for accessing the field via an interface.
+func (v *GetGCPProviderDetailsCloudProviderDetailsAWSProviderDetails) GetTypename() string {
+	return v.Typename
+}
+
+// GetGCPProviderDetailsCloudProviderDetailsAzureProviderDetails includes the requested fields of the GraphQL type AzureProviderDetails.
+type GetGCPProviderDetailsCloudProviderDetailsAzureProviderDetails struct {
+	Typename string `json:"__typename"`
+}
+
+// GetTypename returns GetGCPProviderDetailsCloudProviderDetailsAzureProviderDetails.Typename, and is useful for accessing the field via an interface.
+func (v *GetGCPProviderDetailsCloudProviderDetailsAzureProviderDetails) GetTypename() string {
+	return v.Typename
+}
+
+// GetGCPProviderDetailsCloudProviderDetailsGCPProviderDetails includes the requested fields of the GraphQL type GCPProviderDetails.
+type GetGCPProviderDetailsCloudProviderDetailsGCPProviderDetails struct {
+	Typename      string                                                                   `json:"__typename"`
+	CloudProvider GetGCPProviderDetailsCloudProviderDetailsGCPProviderDetailsCloudProvider `json:"cloudProvider"`
+}
+
+// GetTypename returns GetGCPProviderDetailsCloudProviderDetailsGCPProviderDetails.Typename, and is useful for accessing the field via an interface.
+func (v *GetGCPProviderDetailsCloudProviderDetailsGCPProviderDetails) GetTypename() string {
+	return v.Typename
+}
+
+// GetCloudProvider returns GetGCPProviderDetailsCloudProviderDetailsGCPProviderDetails.CloudProvider, and is useful for accessing the field via an interface.
+func (v *GetGCPProviderDetailsCloudProviderDetailsGCPProviderDetails) GetCloudProvider() GetGCPProviderDetailsCloudProviderDetailsGCPProviderDetailsCloudProvider {
+	return v.CloudProvider
+}
+
+// GetGCPProviderDetailsCloudProviderDetailsGCPProviderDetailsCloudProvider includes the requested fields of the GraphQL type CloudProvider.
+type GetGCPProviderDetailsCloudProviderDetailsGCPProviderDetailsCloudProvider struct {
+	Id     uuid.UUID           `json:"id"`
+	Status CloudProviderStatus `json:"status"`
+}
+
+// GetId returns GetGCPProviderDetailsCloudProviderDetailsGCPProviderDetailsCloudProvider.Id, and is useful for accessing the field via an interface.
+func (v *GetGCPProviderDetailsCloudProviderDetailsGCPProviderDetailsCloudProvider) GetId() uuid.UUID {
+	return v.Id
+}
+
+// GetStatus returns GetGCPProviderDetailsCloudProviderDetailsGCPProviderDetailsCloudProvider.Status, and is useful for accessing the field via an interface.
+func (v *GetGCPProviderDetailsCloudProviderDetailsGCPProviderDetailsCloudProvider) GetStatus() CloudProviderStatus {
+	return v.Status
+}
+
+// GetGCPProviderDetailsResponse is returned by GetGCPProviderDetails on success.
+type GetGCPProviderDetailsResponse struct {
+	// Retrieves details for a Cloud Provider (like the available AWS regions)
+	CloudProviderDetails GetGCPProviderDetailsCloudProviderDetails `json:"-"`
+}
+
+// GetCloudProviderDetails returns GetGCPProviderDetailsResponse.CloudProviderDetails, and is useful for accessing the field via an interface.
+func (v *GetGCPProviderDetailsResponse) GetCloudProviderDetails() GetGCPProviderDetailsCloudProviderDetails {
+	return v.CloudProviderDetails
+}
+
+func (v *GetGCPProviderDetailsResponse) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*GetGCPProviderDetailsResponse
+		CloudProviderDetails json.RawMessage `json:"cloudProviderDetails"`
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.GetGCPProviderDetailsResponse = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	{
+		dst := &v.CloudProviderDetails
+		src := firstPass.CloudProviderDetails
+		if len(src) != 0 && string(src) != "null" {
+			err = __unmarshalGetGCPProviderDetailsCloudProviderDetails(
+				src, dst)
+			if err != nil {
+				return fmt.Errorf(
+					"unable to unmarshal GetGCPProviderDetailsResponse.CloudProviderDetails: %w", err)
+			}
+		}
+	}
+	return nil
+}
+
+type __premarshalGetGCPProviderDetailsResponse struct {
+	CloudProviderDetails json.RawMessage `json:"cloudProviderDetails"`
+}
+
+func (v *GetGCPProviderDetailsResponse) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *GetGCPProviderDetailsResponse) __premarshalJSON() (*__premarshalGetGCPProviderDetailsResponse, error) {
+	var retval __premarshalGetGCPProviderDetailsResponse
+
+	{
+
+		dst := &retval.CloudProviderDetails
+		src := v.CloudProviderDetails
+		var err error
+		*dst, err = __marshalGetGCPProviderDetailsCloudProviderDetails(
+			&src)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"unable to marshal GetGCPProviderDetailsResponse.CloudProviderDetails: %w", err)
+		}
+	}
+	return &retval, nil
 }
 
 // NewGCPProviderCreateCloudProvider includes the requested fields of the GraphQL type CloudProvider.
@@ -906,6 +1134,33 @@ type UpdateGCPProviderUpdateCloudProviderTeam struct {
 // GetId returns UpdateGCPProviderUpdateCloudProviderTeam.Id, and is useful for accessing the field via an interface.
 func (v *UpdateGCPProviderUpdateCloudProviderTeam) GetId() string { return v.Id }
 
+// ValidateGCPProviderResponse is returned by ValidateGCPProvider on success.
+type ValidateGCPProviderResponse struct {
+	// Validates a Cloud Provider configuration by ID
+	ValidateCloudProvider ValidateGCPProviderValidateCloudProviderCloudProviderValidationResult `json:"validateCloudProvider"`
+}
+
+// GetValidateCloudProvider returns ValidateGCPProviderResponse.ValidateCloudProvider, and is useful for accessing the field via an interface.
+func (v *ValidateGCPProviderResponse) GetValidateCloudProvider() ValidateGCPProviderValidateCloudProviderCloudProviderValidationResult {
+	return v.ValidateCloudProvider
+}
+
+// ValidateGCPProviderValidateCloudProviderCloudProviderValidationResult includes the requested fields of the GraphQL type CloudProviderValidationResult.
+type ValidateGCPProviderValidateCloudProviderCloudProviderValidationResult struct {
+	Result  CloudProviderStatus `json:"result"`
+	Details string              `json:"details"`
+}
+
+// GetResult returns ValidateGCPProviderValidateCloudProviderCloudProviderValidationResult.Result, and is useful for accessing the field via an interface.
+func (v *ValidateGCPProviderValidateCloudProviderCloudProviderValidationResult) GetResult() CloudProviderStatus {
+	return v.Result
+}
+
+// GetDetails returns ValidateGCPProviderValidateCloudProviderCloudProviderValidationResult.Details, and is useful for accessing the field via an interface.
+func (v *ValidateGCPProviderValidateCloudProviderCloudProviderValidationResult) GetDetails() string {
+	return v.Details
+}
+
 // __DeleteGCPProviderInput is used internally by genqlient
 type __DeleteGCPProviderInput struct {
 	Id uuid.UUID `json:"Id"`
@@ -913,6 +1168,14 @@ type __DeleteGCPProviderInput struct {
 
 // GetId returns __DeleteGCPProviderInput.Id, and is useful for accessing the field via an interface.
 func (v *__DeleteGCPProviderInput) GetId() uuid.UUID { return v.Id }
+
+// __GetGCPProviderDetailsInput is used internally by genqlient
+type __GetGCPProviderDetailsInput struct {
+	Id uuid.UUID `json:"Id"`
+}
+
+// GetId returns __GetGCPProviderDetailsInput.Id, and is useful for accessing the field via an interface.
+func (v *__GetGCPProviderDetailsInput) GetId() uuid.UUID { return v.Id }
 
 // __NewGCPProviderInput is used internally by genqlient
 type __NewGCPProviderInput struct {
@@ -969,6 +1232,14 @@ func (v *__UpdateGCPProviderInput) GetWIPId() string { return v.WIPId }
 
 // GetWIPPId returns __UpdateGCPProviderInput.WIPPId, and is useful for accessing the field via an interface.
 func (v *__UpdateGCPProviderInput) GetWIPPId() string { return v.WIPPId }
+
+// __ValidateGCPProviderInput is used internally by genqlient
+type __ValidateGCPProviderInput struct {
+	Id uuid.UUID `json:"Id"`
+}
+
+// GetId returns __ValidateGCPProviderInput.Id, and is useful for accessing the field via an interface.
+func (v *__ValidateGCPProviderInput) GetId() uuid.UUID { return v.Id }
 
 // The mutation executed by DeleteGCPProvider.
 const DeleteGCPProvider_Operation = `
@@ -1042,6 +1313,46 @@ func GCPProviders(
 	}
 
 	data_ = &GCPProvidersResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The query executed by GetGCPProviderDetails.
+const GetGCPProviderDetails_Operation = `
+query GetGCPProviderDetails ($Id: UUID!) {
+	cloudProviderDetails(cloudProviderId: $Id) {
+		__typename
+		... on GCPProviderDetails {
+			cloudProvider {
+				id
+				status
+			}
+		}
+	}
+}
+`
+
+func GetGCPProviderDetails(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	Id uuid.UUID,
+) (data_ *GetGCPProviderDetailsResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "GetGCPProviderDetails",
+		Query:  GetGCPProviderDetails_Operation,
+		Variables: &__GetGCPProviderDetailsInput{
+			Id: Id,
+		},
+	}
+
+	data_ = &GetGCPProviderDetailsResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
@@ -1158,6 +1469,41 @@ func UpdateGCPProvider(
 	}
 
 	data_ = &UpdateGCPProviderResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by ValidateGCPProvider.
+const ValidateGCPProvider_Operation = `
+mutation ValidateGCPProvider ($Id: UUID!) {
+	validateCloudProvider(cloudProviderId: $Id) {
+		result
+		details
+	}
+}
+`
+
+func ValidateGCPProvider(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	Id uuid.UUID,
+) (data_ *ValidateGCPProviderResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "ValidateGCPProvider",
+		Query:  ValidateGCPProvider_Operation,
+		Variables: &__ValidateGCPProviderInput{
+			Id: Id,
+		},
+	}
+
+	data_ = &ValidateGCPProviderResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(

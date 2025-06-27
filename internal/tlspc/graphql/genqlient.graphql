@@ -90,3 +90,21 @@ mutation UpdateGCPProvider($Id: UUID!, $Name: String!, $Team: UUID!, $Project: S
 mutation DeleteGCPProvider($Id: UUID!) {
     deleteCloudProvider(cloudProviderId: [$Id])
 }
+
+query GetGCPProviderDetails($Id: UUID!) {
+    cloudProviderDetails(cloudProviderId: $Id) {
+        ... on GCPProviderDetails {
+            cloudProvider {
+                id
+                status
+            }
+        }
+    }
+}
+
+mutation ValidateGCPProvider($Id: UUID!) {
+    validateCloudProvider(cloudProviderId: $Id) {
+        result
+        details
+    }
+}
