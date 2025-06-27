@@ -6,14 +6,17 @@ package provider
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"terraform-provider-tlspc/internal/tlspc"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -62,6 +65,35 @@ func (r *teamResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 				ElementType:         types.StringType,
 				MarkdownDescription: "List of user ids",
 			},
+			"user_matching_rules": schema.SetNestedAttribute{
+				Optional:            true,
+				MarkdownDescription: "List of rules to add members via SSO claims. Please refer to the [documentation](https://docs.venafi.cloud/vcs-platform/r-team-membership-rule-guidelines/) for detailed rule configuration.",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"claim_name": schema.StringAttribute{
+							Required:            true,
+							MarkdownDescription: "The SSO property that this rule acts on",
+						},
+						"operator": schema.StringAttribute{
+							Required: true,
+							MarkdownDescription: `The operator of this rule, valid options:
+    * EQUALS
+    * NOT_EQUALS
+    * CONTAINS
+    * NOT_CONTAINS
+    * STARTS_WITH
+    * ENDS_WITH`,
+							Validators: []validator.String{
+								stringvalidator.OneOf("EQUALS", "NOT_EQUALS", "CONTAINS", "NOT_CONTAINS", "STARTS_WITH", "ENDS_WITH"),
+							},
+						},
+						"value": schema.StringAttribute{
+							Required:            true,
+							MarkdownDescription: "The value to check for",
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -86,10 +118,17 @@ func (r *teamResource) Configure(_ context.Context, req resource.ConfigureReques
 }
 
 type teamResourceModel struct {
-	ID     types.String   `tfsdk:"id"`
-	Name   types.String   `tfsdk:"name"`
-	Role   types.String   `tfsdk:"role"`
-	Owners []types.String `tfsdk:"owners"`
+	ID                types.String       `tfsdk:"id"`
+	Name              types.String       `tfsdk:"name"`
+	Role              types.String       `tfsdk:"role"`
+	Owners            []types.String     `tfsdk:"owners"`
+	UserMatchingRules []userMatchingRule `tfsdk:"user_matching_rules"`
+}
+
+type userMatchingRule struct {
+	ClaimName types.String `tfsdk:"claim_name"`
+	Operator  types.String `tfsdk:"operator"`
+	Value     types.String `tfsdk:"value"`
 }
 
 func (r *teamResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -105,11 +144,21 @@ func (r *teamResource) Create(ctx context.Context, req resource.CreateRequest, r
 		owners = append(owners, v.ValueString())
 	}
 
+	umr := []tlspc.UserMatchingRule{}
+	for _, v := range plan.UserMatchingRules {
+		umr = append(umr, tlspc.UserMatchingRule{
+			ClaimName: v.ClaimName.ValueString(),
+			Operator:  v.Operator.ValueString(),
+			Value:     v.Value.ValueString(),
+		})
+	}
+
 	team := tlspc.Team{
-		Name:    plan.Name.ValueString(),
-		Role:    plan.Role.ValueString(),
-		Owners:  owners,
-		Members: []string{},
+		Name:              plan.Name.ValueString(),
+		Role:              plan.Role.ValueString(),
+		Owners:            owners,
+		Members:           []string{},
+		UserMatchingRules: umr,
 	}
 
 	created, err := r.client.CreateTeam(team)
@@ -153,6 +202,17 @@ func (r *teamResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	}
 	state.Owners = owners
 
+	umr := []userMatchingRule{}
+	for _, v := range team.UserMatchingRules {
+		umr = append(umr, userMatchingRule{
+			ClaimName: types.StringValue(v.ClaimName),
+			Operator:  types.StringValue(v.Operator),
+			Value:     types.StringValue(v.Value),
+		})
+	}
+
+	state.UserMatchingRules = umr
+
 	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
 }
@@ -171,11 +231,20 @@ func (r *teamResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	if state.Name != plan.Name || state.Role != plan.Role {
+	if state.Name != plan.Name || state.Role != plan.Role || !reflect.DeepEqual(state.UserMatchingRules, plan.UserMatchingRules) {
+		umr := []tlspc.UserMatchingRule{}
+		for _, v := range plan.UserMatchingRules {
+			umr = append(umr, tlspc.UserMatchingRule{
+				ClaimName: v.ClaimName.ValueString(),
+				Operator:  v.Operator.ValueString(),
+				Value:     v.Value.ValueString(),
+			})
+		}
 		team := tlspc.Team{
-			ID:   state.ID.ValueString(),
-			Name: plan.Name.ValueString(),
-			Role: plan.Role.ValueString(),
+			ID:                state.ID.ValueString(),
+			Name:              plan.Name.ValueString(),
+			Role:              plan.Role.ValueString(),
+			UserMatchingRules: umr,
 		}
 		_, err := r.client.UpdateTeam(team)
 		if err != nil {

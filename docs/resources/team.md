@@ -17,6 +17,13 @@ resource "tlspc_team" "app_team_1" {
   name   = "App Team 1"
   role   = "PLATFORM_ADMIN"
   owners = [data.tlspc_user.owner.id]
+  user_matching_rules = [
+    {
+      claim_name = "adGroups"
+      operator   = "CONTAINS"
+      value      = "Venafi"
+    }
+  ]
 }
 ```
 
@@ -34,6 +41,25 @@ resource "tlspc_team" "app_team_1" {
     * RESOURCE_OWNER
     * GUEST
 
+### Optional
+
+- `user_matching_rules` (Attributes Set) List of rules to add members via SSO claims. Please refer to the [documentation](https://docs.venafi.cloud/vcs-platform/r-team-membership-rule-guidelines/) for detailed rule configuration. (see [below for nested schema](#nestedatt--user_matching_rules))
+
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+<a id="nestedatt--user_matching_rules"></a>
+### Nested Schema for `user_matching_rules`
+
+Required:
+
+- `claim_name` (String) The SSO property that this rule acts on
+- `operator` (String) The operator of this rule, valid options:
+    * EQUALS
+    * NOT_EQUALS
+    * CONTAINS
+    * NOT_CONTAINS
+    * STARTS_WITH
+    * ENDS_WITH
+- `value` (String) The value to check for
