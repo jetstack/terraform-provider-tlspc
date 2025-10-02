@@ -72,4 +72,5 @@ resource "tlspc_service_account" "wif-issuer" {
 
 ### Read-Only
 
+- `credential_expiry` (String) Credential expiry datetime
 - `id` (String) The ID of this resource

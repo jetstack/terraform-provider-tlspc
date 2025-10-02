@@ -42,6 +42,7 @@ output "dockerconfig" {
 
 ### Read-Only
 
+- `credential_expiry` (String) Credential expiry datetime
 - `id` (String) The ID of this resource.
 - `oci_account_name` (String) Generated OCI account name
 - `oci_registry_token` (String, Sensitive) Generated OCI registry token
