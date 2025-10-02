@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 )
 
 const DefaultEndpoint = "https://api.venafi.cloud"
@@ -303,20 +304,21 @@ func (c *Client) DeleteTeam(id string) error {
 }
 
 type ServiceAccount struct {
-	ID                 string   `json:"id,omitempty"`
-	Name               string   `json:"name"`
-	Owner              string   `json:"owner"`
-	Scopes             []string `json:"scopes"`
-	CredentialLifetime int32    `json:"credentialLifetime,omitempty"`
-	PublicKey          string   `json:"publicKey,omitempty"`
-	AuthenticationType string   `json:"authenticationType,omitempty"`
-	OciAccountName     string   `json:"ociAccountName,omitempty"`
-	OciRegistryToken   string   `json:"ociRegistryToken,omitempty"`
-	JwksURI            string   `json:"jwksURI,omitempty"`
-	IssuerURL          string   `json:"issuerURL,omitempty"`
-	Audience           string   `json:"audience,omitempty"`
-	Subject            string   `json:"subject,omitempty"`
-	Applications       []string `json:"applications,omitempty"`
+	ID                 string    `json:"id,omitempty"`
+	Name               string    `json:"name"`
+	Owner              string    `json:"owner"`
+	Scopes             []string  `json:"scopes"`
+	CredentialLifetime int32     `json:"credentialLifetime,omitempty"`
+	CredentialExpiry   time.Time `json:"credentialsExpiringOn,omitempty"`
+	PublicKey          string    `json:"publicKey,omitempty"`
+	AuthenticationType string    `json:"authenticationType,omitempty"`
+	OciAccountName     string    `json:"ociAccountName,omitempty"`
+	OciRegistryToken   string    `json:"ociRegistryToken,omitempty"`
+	JwksURI            string    `json:"jwksURI,omitempty"`
+	IssuerURL          string    `json:"issuerURL,omitempty"`
+	Audience           string    `json:"audience,omitempty"`
+	Subject            string    `json:"subject,omitempty"`
+	Applications       []string  `json:"applications,omitempty"`
 }
 
 func (c *Client) CreateServiceAccount(sa ServiceAccount) (*ServiceAccount, error) {

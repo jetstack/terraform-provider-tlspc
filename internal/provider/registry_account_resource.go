@@ -6,6 +6,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"terraform-provider-tlspc/internal/tlspc"
 
@@ -76,6 +77,10 @@ func (r *registryAccountResource) Schema(_ context.Context, _ resource.SchemaReq
 				Required:            true,
 				MarkdownDescription: "Credential Lifetime in days",
 			},
+			"credential_expiry": schema.StringAttribute{
+				Computed:            true,
+				MarkdownDescription: "Credential expiry datetime",
+			},
 		},
 	}
 }
@@ -107,6 +112,7 @@ type registryAccountResourceModel struct {
 	OciAccountName     types.String   `tfsdk:"oci_account_name"`
 	OciRegistryToken   types.String   `tfsdk:"oci_registry_token"`
 	CredentialLifetime types.Int32    `tfsdk:"credential_lifetime"`
+	CredentialExpiry   types.String   `tfsdk:"credential_expiry"`
 }
 
 func (r *registryAccountResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -165,6 +171,7 @@ func (r *registryAccountResource) Read(ctx context.Context, req resource.ReadReq
 	state.ID = types.StringValue(sa.ID)
 	state.Name = types.StringValue(sa.Name)
 	state.Owner = types.StringValue(sa.Owner)
+	state.CredentialExpiry = types.StringValue(sa.CredentialExpiry.Format(time.RFC3339))
 
 	scopes := []types.String{}
 	for _, v := range sa.Scopes {

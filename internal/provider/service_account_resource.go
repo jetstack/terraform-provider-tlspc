@@ -6,6 +6,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"terraform-provider-tlspc/internal/tlspc"
 
@@ -61,6 +62,10 @@ A list of scopes that this service account is authorised for. Available options 
     * certificate-issuance
     * kubernetes-discovery
 `,
+			},
+			"credential_expiry": schema.StringAttribute{
+				Computed:            true,
+				MarkdownDescription: "Credential expiry datetime",
 			},
 			// Agent service account
 			"public_key": schema.StringAttribute{
@@ -128,6 +133,7 @@ type serviceAccountResourceModel struct {
 	Audience           types.String   `tfsdk:"audience"`
 	Subject            types.String   `tfsdk:"subject"`
 	Applications       []types.String `tfsdk:"applications"`
+	CredentialExpiry   types.String   `tfsdk:"credential_expiry"`
 }
 
 func (r *serviceAccountResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -221,6 +227,7 @@ func (r *serviceAccountResource) Read(ctx context.Context, req resource.ReadRequ
 	state.ID = types.StringValue(sa.ID)
 	state.Name = types.StringValue(sa.Name)
 	state.Owner = types.StringValue(sa.Owner)
+	state.CredentialExpiry = types.StringValue(sa.CredentialExpiry.Format(time.RFC3339))
 	if sa.PublicKey != state.PublicKey.ValueString() {
 		state.PublicKey = types.StringValue(sa.PublicKey)
 	}
