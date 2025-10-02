@@ -211,7 +211,9 @@ func (r *teamResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		})
 	}
 
-	state.UserMatchingRules = umr
+	if len(umr) > 0 {
+		state.UserMatchingRules = umr
+	}
 
 	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
