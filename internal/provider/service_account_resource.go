@@ -10,6 +10,7 @@ import (
 	"terraform-provider-tlspc/internal/tlspc"
 	"terraform-provider-tlspc/internal/validators"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -97,6 +98,9 @@ A list of scopes that this service account is authorised for. Available options 
 				Optional:            true,
 				ElementType:         types.StringType,
 				MarkdownDescription: "List of Applications which this service account is authorised for",
+				Validators: []validator.Set{
+					setvalidator.ValueStringsAre(validators.Uuid()),
+				},
 			},
 		},
 	}

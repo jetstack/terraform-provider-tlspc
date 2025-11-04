@@ -9,7 +9,9 @@ import (
 	"reflect"
 
 	"terraform-provider-tlspc/internal/tlspc"
+	"terraform-provider-tlspc/internal/validators"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -64,6 +66,9 @@ func (r *teamResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 				Required:            true,
 				ElementType:         types.StringType,
 				MarkdownDescription: "List of user ids",
+				Validators: []validator.Set{
+					setvalidator.ValueStringsAre(validators.Uuid()),
+				},
 			},
 			"user_matching_rules": schema.SetNestedAttribute{
 				Optional:            true,
