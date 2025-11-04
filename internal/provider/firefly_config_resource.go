@@ -52,6 +52,9 @@ func (r *fireflyConfigResource) Schema(_ context.Context, _ resource.SchemaReque
 			"subca_provider": schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "The ID of the Firefly SubCA Provider",
+				Validators: []validator.String{
+					validators.Uuid(),
+				},
 			},
 			"service_accounts": schema.SetAttribute{
 				Required:            true,
