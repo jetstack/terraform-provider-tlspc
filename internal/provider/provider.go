@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/function"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,9 +56,8 @@ We recommend that you create a custom user with the [permissions required](https
 		Description: "Provider for the Venafi TLS Protect Cloud Platform",
 		Attributes: map[string]schema.Attribute{
 			"apikey": schema.StringAttribute{
-				MarkdownDescription: "API Key",
-				Optional:            false,
-				Required:            true,
+				MarkdownDescription: "API Key. Required unless specified by setting the environment variable `TLSPC_APIKEY`",
+				Optional:            true,
 			},
 			"endpoint": schema.StringAttribute{
 				MarkdownDescription: "TLSPC API Endpoint",
@@ -81,8 +81,18 @@ func (p *tlspcProvider) Configure(ctx context.Context, req provider.ConfigureReq
 	if !config.ApiKey.IsNull() {
 		apikey = config.ApiKey.ValueString()
 	}
+	if apikey == "" {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("apikey"),
+			"API Key not provided",
+			"The provider cannot create the TLSPC API client as the API Key has not been provided",
+		)
+	}
 	if !config.Endpoint.IsNull() {
 		endpoint = config.Endpoint.ValueString()
+	}
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	client, _ := tlspc.NewClient(apikey, endpoint, p.version)
