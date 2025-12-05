@@ -8,12 +8,15 @@ import (
 	"fmt"
 
 	"terraform-provider-tlspc/internal/tlspc"
+	"terraform-provider-tlspc/internal/validators"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -52,6 +55,9 @@ func (r *serviceAccountResource) Schema(_ context.Context, _ resource.SchemaRequ
 			"owner": schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "ID of the team that owns this service account",
+				Validators: []validator.String{
+					validators.Uuid(),
+				},
 			},
 			"scopes": schema.SetAttribute{
 				Required:    true,
@@ -92,6 +98,9 @@ A list of scopes that this service account is authorised for. Available options 
 				Optional:            true,
 				ElementType:         types.StringType,
 				MarkdownDescription: "List of Applications which this service account is authorised for",
+				Validators: []validator.Set{
+					setvalidator.ValueStringsAre(validators.Uuid()),
+				},
 			},
 		},
 	}

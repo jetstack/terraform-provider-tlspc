@@ -8,12 +8,15 @@ import (
 	"fmt"
 
 	"terraform-provider-tlspc/internal/tlspc"
+	"terraform-provider-tlspc/internal/validators"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -52,16 +55,25 @@ func (r *fireflyConfigResource) Schema(_ context.Context, _ resource.SchemaReque
 			"subca_provider": schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "The ID of the Firefly SubCA Provider",
+				Validators: []validator.String{
+					validators.Uuid(),
+				},
 			},
 			"service_accounts": schema.SetAttribute{
 				Required:            true,
 				ElementType:         types.StringType,
 				MarkdownDescription: "A list of service account IDs",
+				Validators: []validator.Set{
+					setvalidator.ValueStringsAre(validators.Uuid()),
+				},
 			},
 			"policies": schema.SetAttribute{
 				Required:            true,
 				ElementType:         types.StringType,
 				MarkdownDescription: "A list of Firefly Issuance Policy IDs",
+				Validators: []validator.Set{
+					setvalidator.ValueStringsAre(validators.Uuid()),
+				},
 			},
 		},
 	}
