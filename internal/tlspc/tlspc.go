@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 )
 
 const DefaultEndpoint = "https://api.venafi.cloud"
@@ -79,7 +80,16 @@ type Users struct {
 }
 
 func (c *Client) GetUser(email string) (*User, error) {
-	path := c.Path(`%s/v1/users/username/` + email)
+	// Return a single user based on email matching.
+	// Ignore deleted users which the API will return.
+	// Disabled users are returned but other API calls will error this state.
+	// Refer to https://developer.venafi.com/tlsprotectcloud/reference/get-v1-users for details of the API behaviour.
+	path := c.Path(`%s/v1/users`)
+
+	queryParams := url.Values{}
+	queryParams.Set("deleted", "false")
+	queryParams.Set("username", email)
+	path = path + "?" + queryParams.Encode()
 
 	resp, err := c.Get(path)
 	if err != nil {
