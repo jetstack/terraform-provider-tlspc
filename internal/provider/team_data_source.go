@@ -8,9 +8,13 @@ import (
 	"fmt"
 
 	"terraform-provider-tlspc/internal/tlspc"
+	"terraform-provider-tlspc/internal/validators"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -68,63 +72,80 @@ func (d *teamDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, r
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
+			"role": schema.StringAttribute{
+				Computed: true,
+				MarkdownDescription: `Role of team, valid options include:
+    * SYSTEM_ADMIN
+    * PKI_ADMIN
+    * PLATFORM_ADMIN
+    * RESOURCE_OWNER
+    * GUEST`,
+			},
+			"owners": schema.SetAttribute{
+				Computed:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: "List of user ids",
+				Validators: []validator.Set{
+					setvalidator.ValueStringsAre(validators.Uuid()),
+				},
+			},
+			"user_matching_rules": schema.SetNestedAttribute{
+				Computed:            true,
+				MarkdownDescription: "List of rules to add members via SSO claims. Please refer to the [documentation](https://docs.venafi.cloud/vcs-platform/r-team-membership-rule-guidelines/) for detailed rule configuration.",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"claim_name": schema.StringAttribute{
+							Required:            true,
+							MarkdownDescription: "The SSO property that this rule acts on",
+						},
+						"operator": schema.StringAttribute{
+							Required: true,
+							MarkdownDescription: `The operator of this rule, valid options:
+    * EQUALS
+    * NOT_EQUALS
+    * CONTAINS
+    * NOT_CONTAINS
+    * STARTS_WITH
+    * ENDS_WITH`,
+							Validators: []validator.String{
+								stringvalidator.OneOf("EQUALS", "NOT_EQUALS", "CONTAINS", "NOT_CONTAINS", "STARTS_WITH", "ENDS_WITH"),
+							},
+						},
+						"value": schema.StringAttribute{
+							Required:            true,
+							MarkdownDescription: "The value to check for",
+						},
+					},
+				},
+			},
 		},
 	}
 }
 
-// Example response from reading all teams
-// {
-//   "teams": [
-//     {
-//       "id": "2341c240-13b0-11f1-a37d-85cf6021b7eb",
-//       "name": "Administrators",
-//       "systemRoles": [
-//         "SYSTEM_ADMIN"
-//       ],
-//       "productRoles": {},
-//       "role": "SYSTEM_ADMIN",
-//       "members": [
-//         "2c0a67c0-13af-11f1-b2e2-91c6a0bc61cc"
-//       ],
-//       "owners": [
-//         "2c0a67c0-13af-11f1-b2e2-91c6a0bc61cc"
-//       ],
-//       "companyId": "e10c4d60-dfb1-11ef-9125-8dbc0cd36e8e",
-//       "userMatchingRules": [],
-//       "modificationDate": "2026-02-27T07:44:25.350+00:00"
-//     }
-//   ]
-// }
-
 type teamDataSourceModel struct {
-	ID   types.String `tfsdk:"id"`
-	Name types.String `tfsdk:"name"`
+	ID                types.String           `tfsdk:"id"`
+	Name              types.String           `tfsdk:"name"`
+	Role              types.String           `tfsdk:"role"`
+	Owners            []types.String         `tfsdk:"owners"`
+	UserMatchingRules []teamUserMatchingRule `tfsdk:"user_matching_rules"`
 }
 
-// type teamResourceModel struct {
-// 	ID                types.String       `tfsdk:"id"`
-// 	Name              types.String       `tfsdk:"name"`
-// 	Role              types.String       `tfsdk:"role"`
-// 	Owners            []types.String     `tfsdk:"owners"`
-// 	UserMatchingRules []userMatchingRule `tfsdk:"user_matching_rules"`
-// }
-
-// type userMatchingRule struct {
-// 	ClaimName types.String `tfsdk:"claim_name"`
-// 	Operator  types.String `tfsdk:"operator"`
-// 	Value     types.String `tfsdk:"value"`
-// }
+type teamUserMatchingRule struct {
+	ClaimName types.String `tfsdk:"claim_name"`
+	Operator  types.String `tfsdk:"operator"`
+	Value     types.String `tfsdk:"value"`
+}
 
 // Read refreshes the Terraform state with the latest data.
 func (d *teamDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var model teamDataSourceModel
-	diags := req.Config.Get(ctx, &model)
+	var state teamDataSourceModel
+	diags := req.Config.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	team, err := d.client.GetTeamByName(model.Name.ValueString())
+	team, err := d.client.GetTeamByName(state.Name.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error retrieving team",
@@ -132,7 +153,29 @@ func (d *teamDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		)
 		return
 	}
-	model.ID = types.StringValue(team.ID)
-	diags = resp.State.Set(ctx, &model)
+	state.ID = types.StringValue(team.ID)
+	state.Name = types.StringValue(team.Name)
+	state.Role = types.StringValue(team.Role)
+
+	owners := []types.String{}
+	for _, v := range team.Owners {
+		owners = append(owners, types.StringValue(v))
+	}
+	state.Owners = owners
+
+	umr := []teamUserMatchingRule{}
+	for _, v := range team.UserMatchingRules {
+		umr = append(umr, teamUserMatchingRule{
+			ClaimName: types.StringValue(v.ClaimName),
+			Operator:  types.StringValue(v.Operator),
+			Value:     types.StringValue(v.Value),
+		})
+	}
+
+	if len(umr) > 0 {
+		state.UserMatchingRules = umr
+	}
+
+	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 }
