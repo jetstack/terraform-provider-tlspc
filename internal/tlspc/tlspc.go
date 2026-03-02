@@ -116,6 +116,40 @@ type UserMatchingRule struct {
 	Value     string `json:"value"`
 }
 
+type Teams struct {
+	Teams []Team `json:"teams"`
+}
+
+func (c *Client) GetTeamByName(name string) (*Team, error) {
+	path := c.Path(`%s/v1/teams`)
+
+	resp, err := c.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting teams: %s", err)
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading response body: %s", err)
+	}
+	var teams Teams
+	err = json.Unmarshal(body, &teams)
+	if err != nil {
+		return nil, fmt.Errorf("Error decoding response: %s", string(body))
+	}
+	// Loop over teams and match on name given.
+	var team *Team
+	for _, t := range teams.Teams {
+		if t.Name == name {
+			team = &t
+			break
+		}
+	}
+	if team == nil {
+		return nil, fmt.Errorf("Team not found: %s", name)
+	}
+	return team, nil
+}
+
 func (c *Client) CreateTeam(team Team) (*Team, error) {
 	path := c.Path(`%s/v1/teams`)
 
