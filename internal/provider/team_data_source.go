@@ -63,7 +63,7 @@ func (d *teamDataSource) Metadata(_ context.Context, req datasource.MetadataRequ
 // Schema defines the schema for the data source.
 func (d *teamDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Look up a team by name and return its ID.",
+		MarkdownDescription: "Look up a team by name and return its details.",
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
 				Required:            true,
@@ -84,7 +84,15 @@ func (d *teamDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, r
 			"owners": schema.SetAttribute{
 				Computed:            true,
 				ElementType:         types.StringType,
-				MarkdownDescription: "List of user ids",
+				MarkdownDescription: "List of team owner ids",
+				Validators: []validator.Set{
+					setvalidator.ValueStringsAre(validators.Uuid()),
+				},
+			},
+			"members": schema.SetAttribute{
+				Computed:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: "List of team member ids",
 				Validators: []validator.Set{
 					setvalidator.ValueStringsAre(validators.Uuid()),
 				},
@@ -127,6 +135,7 @@ type teamDataSourceModel struct {
 	Name              types.String           `tfsdk:"name"`
 	Role              types.String           `tfsdk:"role"`
 	Owners            []types.String         `tfsdk:"owners"`
+	Members           []types.String         `tfsdk:"members"`
 	UserMatchingRules []teamUserMatchingRule `tfsdk:"user_matching_rules"`
 }
 
@@ -162,6 +171,12 @@ func (d *teamDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		owners = append(owners, types.StringValue(v))
 	}
 	state.Owners = owners
+
+	members := []types.String{}
+	for _, v := range team.Members {
+		members = append(members, types.StringValue(v))
+	}
+	state.Members = members
 
 	umr := []teamUserMatchingRule{}
 	for _, v := range team.UserMatchingRules {
