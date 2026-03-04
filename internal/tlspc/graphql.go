@@ -18,7 +18,7 @@ func (c *Client) GetGraphQLClient() gql.Client {
 	httpClient := http.DefaultClient
 	rt := WithHeader(httpClient.Transport)
 	rt.Set("tppl-api-key", c.apikey)
-	rt.Header.Set("User-Agent", "terraform-provider-tlspc/"+c.version)
+	rt.Set("User-Agent", "terraform-provider-tlspc/"+c.version)
 	httpClient.Transport = rt
 
 	path := c.Path(`%s/graphql`)
