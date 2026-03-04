@@ -136,16 +136,23 @@ func (c *Client) GetTeamByName(name string) (*Team, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Error decoding response: %s", string(body))
 	}
+
 	// Loop over teams and match on name given.
+	var teamsByName []Team
 	var team *Team
+	// Loop through all teams and append only those with matching name to teamsByName.
 	for _, t := range teams.Teams {
 		if t.Name == name {
-			team = &t
-			break
+			teamsByName = append(teamsByName, t)
 		}
 	}
-	if team == nil {
+	// Filter more than 1 match / no matches.
+	if len(teamsByName) > 1 {
+		return nil, fmt.Errorf("Unexpected number of teams returned (%d)", len(teamsByName))
+	} else if len(teamsByName) == 0 {
 		return nil, fmt.Errorf("Team not found: %s", name)
+	} else {
+		team = &teamsByName[0]
 	}
 	return team, nil
 }
