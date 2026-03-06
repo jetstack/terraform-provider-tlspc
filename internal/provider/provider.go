@@ -122,6 +122,7 @@ func (p *tlspcProvider) DataSources(ctx context.Context) []func() datasource.Dat
 		NewUserDataSource,
 		NewCAProductDataSource,
 		NewCertificateTemplateDataSource,
+		NewTeamDataSource,
 	}
 }
 
