@@ -844,6 +844,45 @@ func (c *Client) CreateApplication(app Application) (*Application, error) {
 	return &created.Applications[0], nil
 }
 
+func (c *Client) GetApplicationByName(name string) (*Application, error) {
+	path := c.Path(`%s/outagedetection/v1/applications`)
+	queryParams := url.Values{}
+	queryParams.Set("ownerDetails", "true")
+	queryParams.Set("ownershipCheck", "true")
+	path = path + "?" + queryParams.Encode()
+
+	resp, err := c.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting applications: %s", err)
+	}
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading response body: %s", err)
+	}
+	var apps applications
+	err = json.Unmarshal(respBody, &apps)
+	if err != nil {
+		return nil, fmt.Errorf("Error decoding response: %s", string(respBody))
+	}
+	var appsByName []Application
+	// Loop through all applications and append only those with matching name to appsByName.
+	for _, a := range apps.Applications {
+		if a.Name == name {
+			appsByName = append(appsByName, a)
+		}
+	}
+
+	if len(appsByName) == 0 {
+		return nil, fmt.Errorf("Didn't find an application with name: %s", name)
+	}
+	if len(appsByName) > 1 {
+		return nil, fmt.Errorf("Unexpected number of applications returned (%d) with name: %s", len(appsByName), name)
+	}
+
+	return &appsByName[0], nil
+}
+
 func (c *Client) GetApplication(id string) (*Application, error) {
 	path := c.Path(`%s/outagedetection/v1/applications/` + id)
 
