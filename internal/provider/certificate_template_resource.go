@@ -9,9 +9,12 @@ import (
 
 	"terraform-provider-tlspc/internal/tlspc"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -21,6 +24,15 @@ var (
 	_ resource.Resource                = &certificateTemplateResource{}
 	_ resource.ResourceWithConfigure   = &certificateTemplateResource{}
 	_ resource.ResourceWithImportState = &certificateTemplateResource{}
+)
+
+var defaultKeyAlgorithms = types.ListValueMust(
+	types.StringType,
+	[]attr.Value{
+		types.StringValue("RSA_2048"),
+		types.StringValue("RSA_3072"),
+		types.StringValue("RSA_4096"),
+	},
 )
 
 type certificateTemplateResource struct {
@@ -60,15 +72,27 @@ func (r *certificateTemplateResource) Schema(_ context.Context, _ resource.Schem
 				MarkdownDescription: "The ID of a Certificate Authority Product Option",
 			},
 			"key_reuse": schema.BoolAttribute{
-				Required:            true,
-				MarkdownDescription: "Allow Private Key Reuse",
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
+				MarkdownDescription: "Allow Private Key Reuse, defaults to false",
 			},
-			/*
-				"key_types": schema.SetAttribute{
-					Required:    true,
-					ElementType: types.MapType,
-				},
-			*/
+			"key_algorithms": schema.ListAttribute{
+				Optional:    true,
+				Computed:    true,
+				ElementType: types.StringType,
+				Default:     listdefault.StaticValue(defaultKeyAlgorithms),
+				MarkdownDescription: `Key Algorithm. Valid options include:
+	* RSA_1024
+	* RSA_2048
+	* RSA_3072
+	* RSA_4096
+	* EC_P256
+	* EC_P384
+	* EC_P521
+	* EC_ED25519
+`,
+			},
 		},
 	}
 }
@@ -93,12 +117,12 @@ func (r *certificateTemplateResource) Configure(_ context.Context, req resource.
 }
 
 type certificateTemplateResourceModel struct {
-	ID          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
-	CAType      types.String `tfsdk:"ca_type"`
-	CAProductID types.String `tfsdk:"ca_product_id"`
-	KeyReuse    types.Bool   `tfsdk:"key_reuse"`
-	//KeyTypes    []types.Map  `tfsdk:"key_types"`
+	ID            types.String   `tfsdk:"id"`
+	Name          types.String   `tfsdk:"name"`
+	CAType        types.String   `tfsdk:"ca_type"`
+	CAProductID   types.String   `tfsdk:"ca_product_id"`
+	KeyReuse      types.Bool     `tfsdk:"key_reuse"`
+	KeyAlgorithms []types.String `tfsdk:"key_algorithms"`
 }
 
 func (r *certificateTemplateResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -124,19 +148,14 @@ func (r *certificateTemplateResource) Create(ctx context.Context, req resource.C
 		CertificateAuthorityProductOptionID: plan.CAProductID.ValueString(),
 		Product:                             pt.Details.Template,
 		KeyReuse:                            plan.KeyReuse.ValueBool(),
-		KeyTypes: []tlspc.KeyType{
-			{
-				Type:       "RSA",
-				KeyLengths: []int32{2048, 3072, 4096},
-			},
-		},
-		SANRegexes:       []string{".*"},
-		SubjectCNRegexes: []string{".*"},
-		SubjectCValues:   []string{".*"},
-		SubjectLRegexes:  []string{".*"},
-		SubjectORegexes:  []string{".*"},
-		SubjectOURegexes: []string{".*"},
-		SubjectSTRegexes: []string{".*"},
+		KeyTypes:                            keyTypesFromAlgorithms(plan.KeyAlgorithms),
+		SANRegexes:                          []string{".*"},
+		SubjectCNRegexes:                    []string{".*"},
+		SubjectCValues:                      []string{".*"},
+		SubjectLRegexes:                     []string{".*"},
+		SubjectORegexes:                     []string{".*"},
+		SubjectOURegexes:                    []string{".*"},
+		SubjectSTRegexes:                    []string{".*"},
 	}
 
 	created, err := r.client.CreateCertificateTemplate(ct)
@@ -174,6 +193,7 @@ func (r *certificateTemplateResource) Read(ctx context.Context, req resource.Rea
 	state.CAType = types.StringValue(ct.CertificateAuthorityType)
 	state.CAProductID = types.StringValue(ct.CertificateAuthorityProductOptionID)
 	state.KeyReuse = types.BoolValue(ct.KeyReuse)
+	state.KeyAlgorithms = keyAlgorithmsFromKeyTypes(ct.KeyTypes)
 
 	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
@@ -209,19 +229,14 @@ func (r *certificateTemplateResource) Update(ctx context.Context, req resource.U
 		CertificateAuthorityProductOptionID: plan.CAProductID.ValueString(),
 		Product:                             pt.Details.Template,
 		KeyReuse:                            plan.KeyReuse.ValueBool(),
-		KeyTypes: []tlspc.KeyType{
-			{
-				Type:       "RSA",
-				KeyLengths: []int32{2048, 3072, 4096},
-			},
-		},
-		SANRegexes:       []string{".*"},
-		SubjectCNRegexes: []string{".*"},
-		SubjectCValues:   []string{".*"},
-		SubjectLRegexes:  []string{".*"},
-		SubjectORegexes:  []string{".*"},
-		SubjectOURegexes: []string{".*"},
-		SubjectSTRegexes: []string{".*"},
+		KeyTypes:                            keyTypesFromAlgorithms(plan.KeyAlgorithms),
+		SANRegexes:                          []string{".*"},
+		SubjectCNRegexes:                    []string{".*"},
+		SubjectCValues:                      []string{".*"},
+		SubjectLRegexes:                     []string{".*"},
+		SubjectORegexes:                     []string{".*"},
+		SubjectOURegexes:                    []string{".*"},
+		SubjectSTRegexes:                    []string{".*"},
 	}
 
 	updated, err := r.client.UpdateCertificateTemplate(ct)

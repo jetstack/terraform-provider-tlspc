@@ -31,4 +31,5 @@ data "tlspc_certificate_template" "default" {
 
 - `ca_product_id` (String) The ID of a Certificate Authority Product Option
 - `id` (String) The ID of this resource.
+- `key_algorithms` (List of String) Allowed key algorithms
 - `key_reuse` (Boolean) Allow Private Key Reuse

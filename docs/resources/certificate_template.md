@@ -31,8 +31,20 @@ resource "tlspc_certificate_template" "built_in" {
 
 - `ca_product_id` (String) The ID of a Certificate Authority Product Option
 - `ca_type` (String) Type of Certificate Authority (see Certificate Authority Product Option data source)
-- `key_reuse` (Boolean) Allow Private Key Reuse
 - `name` (String) Name of the Certificate Issuing Template
+
+### Optional
+
+- `key_algorithms` (List of String) Key Algorithm. Valid options include:
+	* RSA_1024
+	* RSA_2048
+	* RSA_3072
+	* RSA_4096
+	* EC_P256
+	* EC_P384
+	* EC_P521
+	* EC_ED25519
+- `key_reuse` (Boolean) Allow Private Key Reuse, defaults to false
 
 ### Read-Only
 
