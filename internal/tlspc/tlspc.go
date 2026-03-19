@@ -1363,14 +1363,6 @@ func (c *Client) DeleteFireflyPolicy(id string) error {
 	return nil
 }
 
-// Define the data structure we want to actually return when querying tenant information.
-type Tenant struct {
-	ID        string   `json:"id,omitempty"`
-	Name      string   `json:"name"`
-	URLPrefix string   `json:"urlPrefix"`
-	Domains   []string `json:"domains"`
-}
-
 // Define the data structures returned from the /v1/useraccounts endpoint.
 type UserAccountResponse struct {
 	User    UserAccount `json:"user"`
