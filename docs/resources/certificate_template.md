@@ -44,6 +44,7 @@ resource "tlspc_certificate_template" "built_in" {
 	* EC_P384
 	* EC_P521
 	* EC_ED25519
+	If unspecified, defaults to: [RSA_2048, RSA_3072, RSA_4096],
 - `key_reuse` (Boolean) Allow Private Key Reuse, defaults to false
 
 ### Read-Only

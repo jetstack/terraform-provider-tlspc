@@ -5,7 +5,6 @@ package provider
 
 import (
 	"fmt"
-	"slices"
 	"strconv"
 	"strings"
 
@@ -14,11 +13,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-var allowedKeyLengths = []int32{1024, 2048, 3072, 4096}
-var allowedKeyCurves = []string{"P256", "P384", "P521", "ED25519"}
+// Keep a short list of the only 8 options supported.
+var allowedAlgorithms = []string{
+	"RSA_1024",
+	"RSA_2048",
+	"RSA_3072",
+	"RSA_4096",
+	"EC_P256",
+	"EC_P384",
+	"EC_P521",
+	"EC_ED25519",
+}
 
 func keyTypesFromAlgorithms(in []types.String) []tlspc.KeyType {
 	// Take in a list of allowed key algorithms and return API compatible objects.
+	// Validation of input is performed at the schema by tfsdk so all inputs can be assumed to be valid.
 	out := make([]tlspc.KeyType, 0, len(in))
 
 	klength := []int32{}
@@ -26,33 +35,13 @@ func keyTypesFromAlgorithms(in []types.String) []tlspc.KeyType {
 
 	for _, v := range in {
 		prts := strings.Split(v.ValueString(), "_")
-
-		// First check no unknown key types or malformed input.
-		if prts[0] != "RSA" && prts[0] != "EC" || len(prts) != 2 {
-			fmt.Printf("Invalid key algorithm: %s\n", v.ValueString())
-			continue
-		}
-
 		// If RSA convert the length part to int32 and add to list.
 		if prts[0] == "RSA" {
-			length, err := strconv.Atoi(prts[1])
-			if err != nil {
-				fmt.Printf("Invalid key length in algorithm: %s\n", prts[1])
-				continue
-			}
-			if !slices.Contains(allowedKeyLengths, int32(length)) {
-				fmt.Printf("Unsupported key length: %d\n", length)
-				continue
-			}
+			length, _ := strconv.Atoi(prts[1])
 			klength = append(klength, int32(length))
 		}
-
 		// If EC check curve is known and add to list.
 		if prts[0] == "EC" {
-			if !slices.Contains(allowedKeyCurves, prts[1]) {
-				fmt.Printf("Unsupported key curve: %s\n", prts[1])
-				continue
-			}
 			kcurves = append(kcurves, prts[1])
 		}
 	}

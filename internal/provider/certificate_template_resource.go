@@ -9,6 +9,8 @@ import (
 
 	"terraform-provider-tlspc/internal/tlspc"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -17,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -82,6 +85,11 @@ func (r *certificateTemplateResource) Schema(_ context.Context, _ resource.Schem
 				Computed:    true,
 				ElementType: types.StringType,
 				Default:     listdefault.StaticValue(defaultKeyAlgorithms),
+				Validators: []validator.List{
+					listvalidator.ValueStringsAre(
+						stringvalidator.OneOf(allowedAlgorithms...),
+					),
+				},
 				MarkdownDescription: `Key Algorithm. Valid options include:
 	* RSA_1024
 	* RSA_2048
@@ -91,6 +99,7 @@ func (r *certificateTemplateResource) Schema(_ context.Context, _ resource.Schem
 	* EC_P384
 	* EC_P521
 	* EC_ED25519
+	If unspecified, defaults to: [RSA_2048, RSA_3072, RSA_4096],
 `,
 			},
 		},
