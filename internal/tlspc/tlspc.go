@@ -1362,3 +1362,93 @@ func (c *Client) DeleteFireflyPolicy(id string) error {
 
 	return nil
 }
+
+// Define the data structures returned from the /v1/useraccounts endpoint.
+type UserAccountResponse struct {
+	User    UserAccount `json:"user"`
+	Company Company     `json:"company"`
+	APIKey  APIKey      `json:"apiKey"`
+}
+
+type UserAccount struct {
+	Username                     string         `json:"username"`
+	ID                           string         `json:"id"`
+	CompanyID                    string         `json:"companyId"`
+	Firstname                    string         `json:"firstname"`
+	Lastname                     string         `json:"lastname"`
+	EmailAddress                 string         `json:"emailAddress"`
+	UserType                     string         `json:"userType"`
+	UserAccountType              string         `json:"userAccountType"`
+	SSOStatus                    string         `json:"ssoStatus"`
+	UserStatus                   string         `json:"userStatus"`
+	SystemRoles                  []string       `json:"systemRoles"`
+	ProductRoles                 map[string]any `json:"productRoles"`
+	LocalLoginDisabled           bool           `json:"localLoginDisabled"`
+	HasPassword                  bool           `json:"hasPassword"`
+	ForceLocalPasswordExpiration bool           `json:"forceLocalPasswordExpiration"`
+	FirstLoginDate               string         `json:"firstLoginDate"`
+	CreationDate                 string         `json:"creationDate"`
+	OwnedTeams                   []string       `json:"ownedTeams"`
+	MemberedTeams                []string       `json:"memberedTeams"`
+	Disabled                     bool           `json:"disabled"`
+	Deleted                      bool           `json:"deleted"`
+	SignupAttributes             map[string]any `json:"signupAttributes"`
+}
+
+type Company struct {
+	ID                  string               `json:"id"`
+	Name                string               `json:"name"`
+	URLPrefix           string               `json:"urlPrefix"`
+	CompanyType         string               `json:"companyType"`
+	Active              bool                 `json:"active"`
+	CreationDate        string               `json:"creationDate"`
+	Domains             []string             `json:"domains"`
+	ProductEntitlements []ProductEntitlement `json:"productEntitlements"`
+}
+
+type ProductEntitlement struct {
+	Label                            string         `json:"label"`
+	Capabilities                     []Capability   `json:"capabilities"`
+	VisibilityConstraintsInformation map[string]any `json:"visibilityConstraintsInformation"`
+}
+
+type Capability struct {
+	Name              string `json:"name"`
+	ProductExpiryDate string `json:"productExpiryDate"`
+	IsTrial           bool   `json:"isTrial"`
+}
+
+type APIKey struct {
+	UserID            string `json:"userId"`
+	Username          string `json:"username"`
+	CompanyID         string `json:"companyId"`
+	APIVersion        string `json:"apiVersion"`
+	APIKeyStatus      string `json:"apiKeyStatus"`
+	CreationDate      string `json:"creationDate"`
+	ValidityStartDate string `json:"validityStartDate"`
+	ValidityEndDate   string `json:"validityEndDate"`
+}
+
+func (c *Client) GetUserAccounts() (*UserAccountResponse, error) {
+	path := c.Path(`%s/v1/useraccounts`)
+
+	resp, err := c.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting user accounts: %s", err)
+	}
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading response body: %s", err)
+	}
+	var userAccount UserAccountResponse
+	err = json.Unmarshal(respBody, &userAccount)
+	if err != nil {
+		return nil, fmt.Errorf("Error decoding response: %s", string(respBody))
+	}
+	if userAccount.Company.ID == "" {
+		return nil, fmt.Errorf("Didn't find user account information; response was: %s", string(respBody))
+	}
+
+	return &userAccount, nil
+}
