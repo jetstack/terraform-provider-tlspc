@@ -13,18 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// Keep a short list of the only 8 options supported.
-var allowedAlgorithms = []string{
-	"RSA_1024",
-	"RSA_2048",
-	"RSA_3072",
-	"RSA_4096",
-	"EC_P256",
-	"EC_P384",
-	"EC_P521",
-	"EC_ED25519",
-}
-
 func keyTypesFromAlgorithms(in []types.String) []tlspc.KeyType {
 	// Take in a list of allowed key algorithms and return API compatible objects.
 	// Validation of input is performed at the schema by tfsdk so all inputs can be assumed to be valid.

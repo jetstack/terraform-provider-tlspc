@@ -87,7 +87,9 @@ func (r *certificateTemplateResource) Schema(_ context.Context, _ resource.Schem
 				Default:     listdefault.StaticValue(defaultKeyAlgorithms),
 				Validators: []validator.List{
 					listvalidator.ValueStringsAre(
-						stringvalidator.OneOf(allowedAlgorithms...),
+						stringvalidator.OneOf(
+							"RSA_1024", "RSA_2048", "RSA_3072", "RSA_4096", "EC_P256", "EC_P384", "EC_P521", "EC_ED25519",
+						),
 					),
 				},
 				MarkdownDescription: `Key Algorithm. Valid options include:
