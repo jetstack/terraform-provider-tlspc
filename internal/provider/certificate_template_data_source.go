@@ -80,16 +80,22 @@ func (d *certTemplateDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 				Computed:            true,
 				MarkdownDescription: "Allow Private Key Reuse",
 			},
+			"key_algorithms": schema.ListAttribute{
+				Computed:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: "Allowed key algorithms",
+			},
 		},
 	}
 }
 
 type certTemplateDataSourceModel struct {
-	ID          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
-	CAType      types.String `tfsdk:"ca_type"`
-	CAProductID types.String `tfsdk:"ca_product_id"`
-	KeyReuse    types.Bool   `tfsdk:"key_reuse"`
+	ID            types.String   `tfsdk:"id"`
+	Name          types.String   `tfsdk:"name"`
+	CAType        types.String   `tfsdk:"ca_type"`
+	CAProductID   types.String   `tfsdk:"ca_product_id"`
+	KeyReuse      types.Bool     `tfsdk:"key_reuse"`
+	KeyAlgorithms []types.String `tfsdk:"key_algorithms"`
 }
 
 // Read refreshes the Terraform state with the latest data.
@@ -116,6 +122,7 @@ func (d *certTemplateDataSource) Read(ctx context.Context, req datasource.ReadRe
 			model.ID = types.StringValue(v.ID)
 			model.CAProductID = types.StringValue(v.CertificateAuthorityProductOptionID)
 			model.KeyReuse = types.BoolValue(v.KeyReuse)
+			model.KeyAlgorithms = keyAlgorithmsFromKeyTypes(v.KeyTypes)
 			found = true
 			continue
 		}
