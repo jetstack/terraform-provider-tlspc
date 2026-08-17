@@ -60,7 +60,8 @@ func (r *applicationResource) Schema(_ context.Context, _ resource.SchemaRequest
 				MarkdownDescription: "A map of owner ids, see example for format",
 			},
 			"ca_template_aliases": schema.MapAttribute{
-				Required:            true,
+				// Not an API required field. In order to update with blank map for application deletion, this must be optional.
+				Optional:            true,
 				ElementType:         types.StringType,
 				MarkdownDescription: "CA Template alias-to-id mapping for templates available to this application, see example for format",
 			},
@@ -271,7 +272,7 @@ func (r *applicationResource) Update(ctx context.Context, req resource.UpdateReq
 }
 
 func (r *applicationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state applicationResourceModel
+	var plan, state applicationResourceModel
 
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -281,10 +282,81 @@ func (r *applicationResource) Delete(ctx context.Context, req resource.DeleteReq
 
 	err := r.client.DeleteApplication(state.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Deleting Application",
-			"Could not delete Application ID "+state.ID.ValueString()+": "+err.Error(),
-		)
+		// Just take the error out for now, at least until we try below...
+		// resp.Diagnostics.AddError(
+		// 	"Error Deleting Application",
+		// 	"Could not delete Application ID "+state.ID.ValueString()+": "+err.Error(),
+		// )
+
+		// TODO: determine the error code here to kick in the next bit of logic.
+		// Just assume whatever the error, lets update the app anyway to remove CA Templates.
+		owners := []tlspc.OwnerAndType{}
+		for _, v := range state.Owners {
+			m := v.Elements()
+			// TODO: Work out how you're supposed to get an unquoted string out
+			kind := strings.Trim(m["type"].String(), `"`)
+			ownerId := strings.Trim(m["owner"].String(), `"`)
+			if kind != "USER" && kind != "TEAM" {
+				resp.Diagnostics.AddError(
+					"Error creating application",
+					"Could not create application, unsupported owner type: "+kind,
+				)
+				return
+			}
+			if ownerId == "" {
+				resp.Diagnostics.AddError(
+					"Error creating application",
+					"Could not create application, undefined owner",
+				)
+				return
+			}
+			owner := tlspc.OwnerAndType{
+				ID:   ownerId,
+				Type: kind,
+			}
+			owners = append(owners, owner)
+		}
+
+		// Set this as: {"":""} to use to overwrite the state
+		aliases := map[string]string{}
+
+		// for k, v := range state.CATemplateAliases.Elements() {
+		// 	aliases[k] = strings.Trim(v.String(), `"`)
+		// }
+
+		application := tlspc.Application{
+			ID:                   state.ID.ValueString(),
+			Name:                 state.Name.ValueString(),
+			Owners:               owners,
+			CertificateTemplates: aliases,
+		}
+
+		updated, err := r.client.UpdateApplication(application)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error updating application",
+				"Could not update application, unexpected error: "+err.Error(),
+			)
+			return
+		}
+
+		diags := req.State.Get(ctx, &state)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		errr := r.client.DeleteApplication(state.ID.ValueString())
+		if errr != nil {
+			resp.Diagnostics.AddError(
+				"Error Deleting Application",
+				"Could not delete Application ID "+state.ID.ValueString()+": "+errr.Error(),
+			)
+		}
+
+		plan.ID = types.StringValue(updated.ID)
+		// diags = resp.State.Set(ctx, plan)
+		resp.Diagnostics.Append(diags...)
 		return
 	}
 }
