@@ -13,10 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func keyTypesFromAlgorithms(in []types.String) []tlspc.KeyType {
+func keyTypesFromAlgorithms(in []types.String) tlspc.KeyTypes {
 	// Take in a list of allowed key algorithms and return API compatible objects.
 	// Validation of input is performed at the schema by tfsdk so all inputs can be assumed to be valid.
-	out := make([]tlspc.KeyType, 0, len(in))
 
 	klength := []int32{}
 	kcurves := []string{}
@@ -25,6 +24,7 @@ func keyTypesFromAlgorithms(in []types.String) []tlspc.KeyType {
 		prts := strings.Split(v.ValueString(), "_")
 		// If RSA convert the length part to int32 and add to list.
 		if prts[0] == "RSA" {
+			// Safe to ignore error as validator ensures int.
 			length, _ := strconv.Atoi(prts[1])
 			klength = append(klength, int32(length))
 		}
@@ -34,42 +34,21 @@ func keyTypesFromAlgorithms(in []types.String) []tlspc.KeyType {
 		}
 	}
 
-	// If we have any RSA inputs, output correct API object.
-	if len(klength) > 0 {
-		obj := tlspc.KeyType{
-			Type:       "RSA",
-			KeyLengths: klength,
-		}
-		out = append(out, obj)
+	return tlspc.KeyTypes{
+		RSALengths: klength,
+		ECCurves:   kcurves,
 	}
-
-	// If we have any EC inputs, output correct API object.
-	if len(kcurves) > 0 {
-		obj := tlspc.KeyType{
-			Type:      "EC",
-			KeyCurves: kcurves,
-		}
-		out = append(out, obj)
-	}
-
-	return out
 }
 
-func keyAlgorithmsFromKeyTypes(in []tlspc.KeyType) []types.String {
+func keyAlgorithmsFromKeyTypes(in tlspc.KeyTypes) []types.String {
 	// Take in a list of API key type objects and return a list of allowed key algorithms.
 	out := []types.String{}
 
-	for _, v := range in {
-		if v.Type == "RSA" {
-			for _, l := range v.KeyLengths {
-				out = append(out, types.StringValue(fmt.Sprintf("RSA_%d", l)))
-			}
-		}
-		if v.Type == "EC" {
-			for _, c := range v.KeyCurves {
-				out = append(out, types.StringValue(fmt.Sprintf("EC_%s", c)))
-			}
-		}
+	for _, v := range in.RSALengths {
+		out = append(out, types.StringValue(fmt.Sprintf("RSA_%d", v)))
+	}
+	for _, v := range in.ECCurves {
+		out = append(out, types.StringValue(fmt.Sprintf("EC_%s", v)))
 	}
 
 	return out

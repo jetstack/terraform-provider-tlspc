@@ -659,19 +659,13 @@ func (c *Client) GetCAProductOptionByID(kind, option_id string) (*CAProductOptio
 	return nil, fmt.Errorf("Specified CA product option not found.")
 }
 
-type KeyType struct {
-	Type       string   `json:"keyType"`
-	KeyLengths []int32  `json:"keyLengths,omitempty"`
-	KeyCurves  []string `json:"keyCurves,omitempty"`
-}
-
 type CertificateTemplate struct {
 	ID                                  string            `json:"id,omitempty"`
 	Name                                string            `json:"name"`
 	CertificateAuthorityType            string            `json:"certificateAuthority"`
 	CertificateAuthorityProductOptionID string            `json:"certificateAuthorityProductOptionId"`
 	KeyReuse                            bool              `json:"keyReuse"`
-	KeyTypes                            []KeyType         `json:"keyTypes"`
+	KeyTypes                            KeyTypes          `json:"keyTypes"`
 	Product                             CAProductTemplate `json:"product"`
 	SANRegexes                          []string          `json:"sanRegexes"`
 	SubjectCNRegexes                    []string          `json:"subjectCNRegexes"`
@@ -680,6 +674,54 @@ type CertificateTemplate struct {
 	SubjectORegexes                     []string          `json:"subjectORegexes"`
 	SubjectOURegexes                    []string          `json:"subjectOURegexes"`
 	SubjectSTRegexes                    []string          `json:"subjectSTRegexes"`
+}
+
+type KeyTypes struct {
+	RSALengths []int32  `json:"-"`
+	ECCurves   []string `json:"-"`
+}
+
+type keyEntry struct {
+	Type       string   `json:"keyType"`
+	KeyLengths []int32  `json:"keyLengths,omitempty"`
+	KeyCurves  []string `json:"keyCurves,omitempty"`
+}
+
+func (kt KeyTypes) MarshalJSON() ([]byte, error) {
+	var entries []keyEntry
+
+	if len(kt.RSALengths) > 0 {
+		entries = append(entries, keyEntry{
+			Type:       "RSA",
+			KeyLengths: kt.RSALengths,
+		})
+	}
+
+	if len(kt.ECCurves) > 0 {
+		entries = append(entries, keyEntry{
+			Type:      "EC",
+			KeyCurves: kt.ECCurves,
+		})
+	}
+
+	return json.Marshal(entries)
+}
+
+func (kt *KeyTypes) UnmarshalJSON(data []byte) error {
+	var entries []keyEntry
+	if err := json.Unmarshal(data, &entries); err != nil {
+		return err
+	}
+
+	for _, entry := range entries {
+		switch entry.Type {
+		case "RSA":
+			kt.RSALengths = entry.KeyLengths
+		case "EC":
+			kt.ECCurves = entry.KeyCurves
+		}
+	}
+	return nil
 }
 
 type certificateTemplates struct {
